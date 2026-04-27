@@ -1,7 +1,7 @@
 # admin_commands.py
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from database import SessionLocal, get_user_by_telegram_id, get_user_by_id, User, Payment, Subscription, Referral
+from ..db.database import SessionLocal, get_user_by_telegram_id, get_user_by_id, User, Payment, Subscription, Referral
 from datetime import datetime, timedelta
 import logging
 

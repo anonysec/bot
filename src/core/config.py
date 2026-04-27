@@ -42,11 +42,27 @@ SOFTWARE_LINKS = {
     'mac': 'https://github.com/yanue/V2rayU/releases'
 }
 
-# Payment Gateways
-PAYMENT_GATEWAY = os.getenv('PAYMENT_GATEWAY', 'zarinpal')  # zarinpal, payir, or idpay
+# Payment Gateways - Optional (enable/disable each one)
+PAYMENT_ENABLED = os.getenv('PAYMENT_ENABLED', 'true').lower() == 'true'
+
+# Zarinpal
+ZARINPAL_ENABLED = os.getenv('ZARINPAL_ENABLED', 'false').lower() == 'true'
 ZARINPAL_MERCHANT_ID = os.getenv('ZARINPAL_MERCHANT_ID', '')
+
+# Pay.ir
+PAYIR_ENABLED = os.getenv('PAYIR_ENABLED', 'false').lower() == 'true'
 PAYIR_API_KEY = os.getenv('PAYIR_API_KEY', '')
+
+# IDPay
+IDPAY_ENABLED = os.getenv('IDPAY_ENABLED', 'false').lower() == 'true'
 IDPAY_API_KEY = os.getenv('IDPAY_API_KEY', '')
+
+# Tetra (https://tetra98.com/docs)
+TETRA_ENABLED = os.getenv('TETRA_ENABLED', 'false').lower() == 'true'
+TETRA_API_KEY = os.getenv('TETRA_API_KEY', '')
+
+# Legacy: Backward compatibility
+PAYMENT_GATEWAY = os.getenv('PAYMENT_GATEWAY', '')  # Optional fallback
 
 # Trial Config Settings
 TRIAL_DURATION_HOURS = int(os.getenv('TRIAL_DURATION_HOURS', '2'))

@@ -12,6 +12,7 @@ from ..db.database import (SessionLocal, get_user_by_telegram_id, get_user_by_id
                       get_user_subscriptions, update_balance, get_wallet, check_rate_limit, record_action,
                       create_payment, update_payment_status, create_referral, get_referrals, get_backups, create_backup)
 from ..core.panel import XUIPanel
+from ..core.payment import has_payment_gateway, get_payment_buttons
 from datetime import datetime, timedelta
 import logging
 
@@ -113,16 +114,25 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         price = plan['price']
         text = f"You selected {plan['name']}. Price: ${price}" if lang == 'en' else f"شما {plan['name_fa']} را انتخاب کردید. قیمت: {price} تومان"
         await query.edit_message_text(text=text)
-        # Show payment methods
-        keyboard = [
-            [InlineKeyboardButton("💳 Pay Now", callback_data=f'pay_{plan_key}')],
-            [InlineKeyboardButton("⬅️ Back", callback_data='buy_config')]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text(text=text, reply_markup=reply_markup)
-    elif query.data.startswith('pay_'):
-        plan_key = query.data.split('_')[1]
-        context.user_data['selected_plan'] = plan_key
+        
+        # Check if payment is enabled
+        if has_payment_gateway():
+            # Show available payment methods
+            payment_buttons = get_payment_buttons()
+            keyboard = []
+            for gateway_name, callback in payment_buttons:
+                keyboard.append([InlineKeyboardButton(f"💳 {gateway_name}", callback_data=callback)])
+            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data='buy_config')])
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(text=text, reply_markup=reply_markup)
+        else:
+            # Payments disabled, ask for email directly
+            await query.edit_message_text("Enter your email:" if lang == 'en' else "ایمیل خود را وارد کنید:")
+            context.user_data['waiting_for_email'] = True
+    elif query.data.startswith('gateway_'):
+        # Gateway selection
+        gateway_name = query.data.split('_')[1]
+        context.user_data['selected_gateway'] = gateway_name
         await query.edit_message_text("Enter your email:" if lang == 'en' else "ایمیل خود را وارد کنید:")
         context.user_data['waiting_for_email'] = True
     elif query.data == 'my_configs':

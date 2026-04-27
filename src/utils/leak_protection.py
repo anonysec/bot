@@ -5,7 +5,7 @@ import asyncio
 from datetime import datetime
 from typing import Dict, List, Optional
 
-class LeakProtection:
+class LeakDetector:
     """Handles VPN leak detection and reporting"""
     
     def __init__(self, proxy_config=None):
@@ -181,7 +181,20 @@ class LeakProtection:
         ])
         
         return results
-    
+
+    def check_all_leaks(self) -> list:
+        """Perform all leak checks and return summary messages"""
+        results = self.full_leak_test()
+        messages = []
+        if not results.get('secure'):
+            if results['tests']['ipv4']['leaked']:
+                messages.append(f"IPv4 leak detected: {results['tests']['ipv4']['ip']}")
+            if results['tests']['ipv6']['leaked']:
+                messages.append(f"IPv6 leak detected: {results['tests']['ipv6']['ip']}")
+            if results['tests']['dns']['leaked']:
+                messages.append(f"DNS leak detected via: {', '.join(results['tests']['dns']['detected_via'])}")
+        return messages
+
     def get_leak_report(self) -> str:
         """Generate human-readable leak test report"""
         report = []

@@ -1,7 +1,7 @@
 # main.py
 import threading
-from .bot import main as bot_main
-from .web import app
+from .bot.bot import main as bot_main
+from .web.web import app
 from .core.scheduler import scheduler
 from .core.config import WEB_HOST, WEB_PORT
 

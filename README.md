@@ -1,253 +1,230 @@
 # 🌐 VPN Selling Bot for 3x-ui Panel
 
-A comprehensive Telegram bot with web control panel for managing and selling VPN configurations, featuring Iranian payment gateways, referral system, traffic alerts, and admin management.
+A complete Telegram bot + web panel for selling VPN configs with Iranian payment gateways, referrals, traffic alerts, backups, and admin management.
 
-## ✨ Features
+## ✨ What’s Included
 
-- **Telegram Bot Interface** - Interactive menu for buying/selling VPN configs
-- **Web Control Panel** - Dashboard for users to view configs, backups, and wallet
-- **Payment Gateways** - Zarinpal, Pay.ir, IDPay (suitable for Iranian users)
-- **Trial/Test Configs** - Configurable trial periods with MB/GB limits
-- **Wallet System** - User balance tracking and credit management
-- **Referral System** - Earn commissions by referring others (10% default)
-- **Traffic Alerts** - Automatic alerts when traffic is low
-- **Backup/Restore** - Users can backup and restore configurations
-- **Admin Panel** - Analytics, payment management, user statistics
-- **Rate Limiting** - Protection against spam and abuse
-- **QR Codes** - Scannable config delivery
-- **Multi-Language** - English and Persian support
-- **Proxy Support** - HTTP and SOCKS5 for restricted networks
-- **Leak Protection** - Automatic VPN leak detection and alerts
-- **Flexible Traffic Plans** - Support for MB and GB based plans
-- **TUI Installer** - Text-based installer for easy setup
-- **Cross-Platform** - Works on Windows and Ubuntu
+- Telegram bot for config purchase, trial access, referrals, wallet, and backups
+- Flask web dashboard for users and admin statistics
+- 3x-ui panel integration with proxy support
+- Optional payment gateways: Zarinpal, Pay.ir, IDPay, Tetra (enable/disable as needed)
+- Flexible traffic plans with MB/GB support
+- Traffic alerting and leak protection
+- Admin/reseller management
+- Backup and restore
+- Single unified launcher for Linux and Windows
+
+## ✅ One File for Docs
+All documentation is now consolidated in this `README.md`.
+The previous separate docs have been merged to reduce clutter.
 
 ## 🚀 Installation
 
 ### Requirements
 - Python 3.8+
 - 3x-ui panel running and accessible
-- Telegram Bot Token (from @BotFather)
+- Telegram bot token from @BotFather
 
-### Quick Setup with TUI Installer
+### Recommended Cross-Platform Setup
 
-1. **Clone and Run Installer**:
+Use the project manager script:
 ```bash
-git clone <your-repo>
-cd bot
+python manage.py install
+```
+
+On Windows, you can also run:
+```bat
+install.bat
+```
+
+This will:
+- create a `venv` environment
+- install dependencies from `requirements.txt`
+- create `.env` from `.env.example`
+
+### Alternative Linux TUI Installer
+If you want the text-based installer on Linux:
+```bash
 python scripts/install.py
 ```
 
-The TUI installer will guide you through:
-- Panel configuration
-- Telegram bot setup
-- Payment gateway configuration
-- Traffic plan customization
-- Admin user setup
+## ▶️ Start the Bot
 
-2. **Alternative Manual Setup**:
+Use the manager script:
 ```bash
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your settings
+python manage.py start
 ```
 
-### Start the Bot
+On Windows:
+```bat
+start.bat
+```
 
+On Linux/macOS:
 ```bash
 ./start.sh
 ```
 
-Or manually:
-```bash
-cd src
-python main.py
-```
+## 📋 Configuration
 
-## 📁 Project Structure
-
-```
-bot/
-├── src/
-│   ├── bot/           # Telegram bot logic
-│   ├── web/           # Flask web application
-│   ├── core/          # Core modules (config, panel, scheduler)
-│   ├── db/            # Database models and operations
-│   └── utils/         # Utility functions and helpers
-├── scripts/
-│   └── install.py     # TUI installer
-├── templates/         # HTML templates
-├── backup/            # Database backups
-├── logs/              # Application logs
-├── start.sh           # Startup script
-├── requirements.txt   # Python dependencies
-└── README.md
-```
-
+Create `.env` from `.env.example` and set at least:
 ```env
-# Panel
 PANEL_URL=https://your-panel.com
 PANEL_USERNAME=admin
-PANEL_PASSWORD=password
-
-# Telegram
+PANEL_PASSWORD=your-password
+INBOUND_ID=1
 TELEGRAM_BOT_TOKEN=your-bot-token
-
-# Payment Gateway (choose one)
+ADMIN_IDS=123456789
 PAYMENT_GATEWAY=zarinpal
 ZARINPAL_MERCHANT_ID=your-merchant-id
-
-# Admin IDs
-ADMIN_IDS=123456789,987654321
-
-# Trial Settings
-TRIAL_DURATION_HOURS=2
-TRIAL_GB_LIMIT=1
+TRIAL_TRAFFIC_LIMIT=1
+TRIAL_TRAFFIC_UNIT=GB
+TRAFFIC_ALERT_GB=1
 ```
 
-4. **Run Application**:
-```bash
-# Start everything (bot + web + scheduler)
-python main.py
-
-# Or run components separately
-python bot.py           # Telegram bot
-python web.py          # Web dashboard (port 5000)
-python scheduler.py    # Traffic alerts
+### Optional proxy settings
+```env
+PANEL_PROXY=socks5://proxy:1080
+TELEGRAM_PROXY=socks5://proxy:1080
 ```
 
-## 📚 Project Structure
+## 🧩 Root Launcher Files
+- `manage.py` — cross-platform installer/start manager
+- `install.bat` — Windows install helper
+- `start.bat` — Windows start helper
+- `start.sh` — Linux/macOS start helper
+- `scripts/install.py` — optional Linux TUI installer
+
+## 🧠 Main Architecture
 
 ```
 bot/
-├── bot.py              # Telegram bot logic
-├── web.py              # Flask web app
-├── panel.py            # 3x-ui API integration
-├── database.py         # SQLAlchemy models
-├── payment.py          # Payment gateway integration
-├── scheduler.py        # Background tasks
-├── config.py           # Configuration
-├── main.py             # Entry point
-├── admin_commands.py    # Admin commands
-├── requirements.txt    # Dependencies
-├── templates/          # HTML templates
-│   ├── base.html
-│   ├── login.html
-│   ├── dashboard.html
-│   ├── configs.html
-│   ├── backup.html
-│   └── admin.html
-└── static/             # CSS/JS files
+├── manage.py         # Cross-platform project manager
+├── install.bat       # Windows install script
+├── start.bat         # Windows start script
+├── start.sh          # Linux/macOS start script
+├── scripts/install.py # Linux TUI installer
+├── src/
+│   ├── bot/          # Telegram bot logic
+│   ├── web/          # Flask web application
+│   ├── core/         # Config, panel, scheduler
+│   ├── db/           # Database models and access
+│   └── utils/        # Helpers and leak protection
+├── backup/           # Backups storage
+├── logs/             # Runtime logs
+├── requirements.txt  # Python dependencies
+└── .env.example      # Environment template
 ```
 
-## 🤖 Bot Commands
+## 💳 Payment Gateways (Optional)
 
-### User Commands
-- `/start` - Initialize bot, choose language
-- `/admin` - Admin panel (admins only)
+Payment systems are **completely optional**. Enable only the gateways you need or disable all for test mode.
 
-### Bot Menu
-- 💳 Buy Config - Purchase a VPN config
-- 🎁 Trial Config - Get free 2-hour test config
-- 📋 My Configs - View active subscriptions
-- 💰 Wallet - Check balance
-- 🤝 Referral - Share referral code
-- 💾 Backup - Backup configurations
+### Supported Gateways
 
-## 💳 Payment Gateways
+| Gateway | Settings | Rate Limit |
+|---------|----------|-----------|
+| **Zarinpal** | Requires merchant ID | Best for Iran |
+| **Pay.ir** | Requires API key | Alternative Iran |
+| **IDPay** | Requires API key | Alternative Iran |
+| **Tetra** | Requires merchant ID | Newer option |
 
-### Zarinpal (Recommended for Iran)
+### Configuration
+
+Set `PAYMENT_ENABLED=true` to enable the feature, then enable individual gateways:
+
 ```env
-PAYMENT_GATEWAY=zarinpal
+# Enable/disable payment system
+PAYMENT_ENABLED=true
+
+# Zarinpal (optional)
+ZARINPAL_ENABLED=true
 ZARINPAL_MERCHANT_ID=your-merchant-id
+
+# Pay.ir (optional)
+PAYIR_ENABLED=false
+PAYIR_API_KEY=
+
+# IDPay (optional)
+IDPAY_ENABLED=false
+IDPAY_API_KEY=
+
+# Tetra (optional, https://tetra98.com/docs)
+TETRA_ENABLED=false
+TETRA_MERCHANT_ID=
 ```
 
-### Pay.ir
+### Disabling Payments
+
+To run without payments (test/free mode):
 ```env
-PAYMENT_GATEWAY=payir
-PAYIR_API_KEY=your-api-key
+PAYMENT_ENABLED=false
 ```
 
-### IDPay
-```env
-PAYMENT_GATEWAY=idpay
-IDPAY_API_KEY=your-api-key
+When payments are disabled:
+- Users can still access trial configs
+- Paid plans require email only (no payment)
+- Admin can still create giveaways
+
+## 🛠️ Running on Windows
+
+1. Install dependencies:
+```bat
+install.bat
+```
+2. Edit `.env` if needed.
+3. Start the bot:
+```bat
+start.bat
 ```
 
-## 📊 Admin Dashboard
+## 🌍 Running on Linux/macOS
 
-Access at `http://localhost:5000` with admin Telegram ID:
-
-- **Statistics** - Total users, revenue, subscriptions
-- **Payments** - Recent transactions and status
-- **Users** - Active users and resellers
-- **Giveaways** - Create and manage free configs
-
-## 🔒 Security Optimizations
-
-- HTTPS for all panel communications
-- Secure random secret keys
-- Input validation and sanitization
-- Environment variables for sensitive data
-- Rate limiting on actions
-- Password hashing in database
-- CSRF protection in web app
-
-## 🌐 Bypassing Iran GFW
-
-- Use TLS-enabled protocols (VLESS, Trojan)
-- Enable obfuscation in 3x-ui
-- Configure CDN fronting (Cloudflare)
-- Use alternative ports
-- VMess with WebSocket/HTTP2
-
-## 📱 Supported VPN Apps
-
-- Android: [V2RayNG](https://play.google.com/store/apps/details?id=com.v2ray.ang)
-- iOS: [V2Box](https://apps.apple.com/app/v2box/id6446814690)
-- Windows: [v2rayN](https://github.com/2dust/v2rayN/releases)
-- Mac: [V2rayU](https://github.com/yanue/V2rayU/releases)
-
-## 💰 Pricing Plans
-
-Default plans (customize in config.py):
-- Basic: 10GB for $5 (30 days)
-- Premium: 50GB for $20 (30 days)
-- Trial: 1GB for 2 hours (free)
-
-## 🤝 Referral System
-
-- Users get unique referral code
-- 10% commission on referred user purchases
-- Automatic tracking and wallet updates
-
-## ⚙️ Advanced Configuration
-
-### Proxy Settings
-For servers behind proxies (Iran):
-```env
-PANEL_PROXY=socks5://proxy:1080
-TELEGRAM_PROXY=http://proxy:8080
+1. Install dependencies:
+```bash
+python manage.py install
+```
+2. Start the bot:
+```bash
+python manage.py start
 ```
 
-### Database
-SQLite by default:
-```env
-DATABASE_URL=sqlite:///vpn_bot.db
+## 🚩 Notes
+
+- `manage.py` is the recommended launcher for both platforms.
+- `scripts/install.py` remains available as an optional TUI installer.
+- `.env.example` now includes the unified trial traffic settings.
+
+## 🛡️ Key Features
+
+- Telegram bot with purchase, trial, referral, wallet, and backup flows
+- Web UI for dashboards and admin pages
+- 3x-ui panel client creation and config delivery
+- Payment gateway integration for Iranian users
+- Traffic alerts and leak detection
+- MB/GB plan support and flexible trial limits
+- All docs merged into this single README
+
+## 🧠 Changelog Summary
+
+- Documentation consolidated into `README.md`
+- Added `manage.py` for install/start on all platforms
+- Added `install.bat` and `start.bat` for Windows
+- Added cross-platform scripting and simplified launch flow
+- Improved `.env.example` with trial traffic unit support
+
+## 📌 Next Steps
+
+After install, edit `.env`, then run:
+```bash
+python manage.py start
 ```
 
-PostgreSQL:
-```env
-DATABASE_URL=postgresql://user:password@localhost/vpn_bot
+If you want a text UI installer on Linux, use:
+```bash
+python scripts/install.py
 ```
 
-### Rate Limiting
-- Buy config: 10 per hour per user
-- Trial config: 1 per day per user
-
-## 🐛 Troubleshooting
-
-### Bot not responding
 - Check TELEGRAM_BOT_TOKEN
 - Verify telegram proxy settings
 - Check internet connectivity

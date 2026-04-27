@@ -1,9 +1,12 @@
 # scheduler.py
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from ..db.database import SessionLocal, get_user_subscriptions, update_subscription_traffic, Subscription, Subscription
+from ..db.database import SessionLocal, get_user_subscriptions, update_subscription_traffic, Subscription
 from ..core.panel import XUIPanel
-from ..core.config import TRAFFIC_ALERT_GB, TELEGRAM_BOT_TOKEN, ADMIN_IDSfrom ..utils.leak_protection import LeakDetectorimport asyncio
+from ..core.config import TRAFFIC_ALERT_GB, TELEGRAM_BOT_TOKEN, ADMIN_IDS
+from ..utils.leak_protection import LeakDetector
+from telegram import Bot
+import asyncio
 import logging
 
 logging.basicConfig(level=logging.INFO)
