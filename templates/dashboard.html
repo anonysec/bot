@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-box">
+            <h6>Total Configs</h6>
+            <h2>{{ subscriptions|length }}</h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-box">
+            <h6>Total Traffic</h6>
+            <h2>{{ (subscriptions|map(attribute='total_gb')|sum)|round(2) }} GB</h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-box">
+            <h6>Wallet Balance</h6>
+            <h2>${{ wallet.balance if wallet else 0 }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-custom">
+            <div class="card-header bg-transparent border-bottom">
+                <h5 class="mb-0">Active Subscriptions</h5>
+            </div>
+            <div class="card-body">
+                {% if subscriptions %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Traffic Used</th>
+                                    <th>Remaining</th>
+                                    <th>Expires</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in subscriptions %}
+                                <tr>
+                                    <td>{{ sub.plan }}</td>
+                                    <td>{{ sub.used_gb|round(2) }} GB</td>
+                                    <td>
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar" style="width: {{ ((sub.used_gb / sub.total_gb) * 100)|round(1) }}%"></div>
+                                        </div>
+                                        {{ (sub.total_gb - sub.used_gb)|round(2) }} GB
+                                    </td>
+                                    <td>{{ sub.expiry_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% if sub.is_trial %}
+                                            <span class="badge bg-warning">Trial</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No active subscriptions. Start by buying a config!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <a href="/configs" class="btn btn-custom btn-primary w-100">View All Configs</a>
+    </div>
+    <div class="col-md-6">
+        <a href="/backup" class="btn btn-custom btn-info w-100">Backup Data</a>
+    </div>
+</div>
+{% endblock %}

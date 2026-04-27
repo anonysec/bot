@@ -1,0 +1,7 @@
+requests[socks]
+python-telegram-bot
+flask
+sqlalchemy
+apscheduler
+qrcode[pil]
+python-dotenv
