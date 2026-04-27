@@ -151,7 +151,7 @@ IDPAY_API_KEY=
 
 # Tetra (optional, https://tetra98.com/docs)
 TETRA_ENABLED=false
-TETRA_MERCHANT_ID=
+TETRA_API_KEY=
 ```
 
 ### Disabling Payments
