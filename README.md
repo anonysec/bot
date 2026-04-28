@@ -1,73 +1,72 @@
 # 🌐 VPN Selling Bot for 3x-ui Panel
 
-A complete Telegram bot + web panel for selling VPN configs with Iranian payment gateways, referrals, traffic alerts, backups, and admin management.
+A complete Telegram bot + web panel for selling VPN configs with Tetra payment gateway (TON/TRON/Card to Card), referrals, traffic alerts, backups, and admin management.
 
 ## ✨ What’s Included
 
 - Telegram bot for config purchase, trial access, referrals, wallet, and backups
-- Flask web dashboard for users and admin statistics
+- Flask web dashboard with setup wizard for easy configuration
 - 3x-ui panel integration with proxy support
-- Optional payment gateways: Zarinpal, Pay.ir, IDPay, Tetra (enable/disable as needed)
+- Tetra payment gateway (TON/TRON/Card to Card payments)
 - Flexible traffic plans with MB/GB support
 - Traffic alerting and leak protection
+- Psiphon abuse detection and prevention
 - Admin/reseller management
 - Backup and restore
 - Single unified launcher for Linux and Windows
-
-## ✅ One File for Docs
-All documentation is now consolidated in this `README.md`.
-The previous separate docs have been merged to reduce clutter.
+- Nginx configuration included
 
 ## 🚀 Installation
 
-### Requirements
-- Python 3.8+
-- 3x-ui panel running and accessible
-- Telegram bot token from @BotFather
+### Quick Start (Recommended)
 
-### Recommended Cross-Platform Setup
-
-Use the project manager script:
+1. **Download and setup:**
 ```bash
-python manage.py install
+git clone <repository-url>
+cd vpn-bot
+python bot.py install
 ```
 
-On Windows, you can also run:
-```bat
-install.bat
-```
-
-This will:
-- create a `venv` environment
-- install dependencies from `requirements.txt`
-- create `.env` from `.env.example`
-
-### Alternative Linux TUI Installer
-If you want the text-based installer on Linux:
+2. **Web-based setup:**
 ```bash
-python scripts/install.py
+python bot.py setup
 ```
+Then open http://localhost:5000/setup in your browser to configure everything.
+
+3. **Start the bot:**
+```bash
+python bot.py start
+```
+
+### Alternative Installation
+
+Use the interactive TUI:
+```bash
+python bot.py tui
+```
+
+This provides a menu-driven interface for all operations.
 
 ## ▶️ Start the Bot
 
-Use the manager script:
+Use the unified bot manager script:
 ```bash
-python manage.py start
+python bot.py start
 ```
 
-On Windows:
-```bat
-start.bat
-```
-
-On Linux/macOS:
+For interactive management:
 ```bash
-./start.sh
+python bot.py tui
 ```
 
 ## 📋 Configuration
 
-Create `.env` from `.env.example` and set at least:
+Use the web setup wizard first to create `config.json`:
+```bash
+python bot.py setup
+```
+
+If you prefer environment variables, create `.env` from `.env.example` and set at least:
 ```env
 PANEL_URL=https://your-panel.com
 PANEL_USERNAME=admin
@@ -75,83 +74,57 @@ PANEL_PASSWORD=your-password
 INBOUND_ID=1
 TELEGRAM_BOT_TOKEN=your-bot-token
 ADMIN_IDS=123456789
-PAYMENT_GATEWAY=zarinpal
-ZARINPAL_MERCHANT_ID=your-merchant-id
+PAYMENT_GATEWAY=tetra
+TETRA_API_KEY=your-tetra-api-key
 TRIAL_TRAFFIC_LIMIT=1
 TRIAL_TRAFFIC_UNIT=GB
 TRAFFIC_ALERT_GB=1
 ```
 
-### Optional proxy settings
+### Proxy Settings
 ```env
 PANEL_PROXY=socks5://proxy:1080
 TELEGRAM_PROXY=socks5://proxy:1080
 ```
 
-## 🧩 Root Launcher Files
-- `manage.py` — cross-platform installer/start manager
-- `install.bat` — Windows install helper
-- `start.bat` — Windows start helper
-- `start.sh` — Linux/macOS start helper
-- `scripts/install.py` — optional Linux TUI installer
+## 🧩 Bot Manager Script
+- `bot.py` — Unified cross-platform installer/start/stop/status/TUI manager
 
 ## 🧠 Main Architecture
 
 ```
 bot/
-├── manage.py         # Cross-platform project manager
-├── install.bat       # Windows install script
-├── start.bat         # Windows start script
-├── start.sh          # Linux/macOS start script
-├── scripts/install.py # Linux TUI installer
+├── bot.py              # Unified cross-platform manager (install/start/stop/status/tui/setup)
+├── nginx.conf          # Nginx configuration template
+├── LICENSE             # MIT License
 ├── src/
-│   ├── bot/          # Telegram bot logic
-│   ├── web/          # Flask web application
-│   ├── core/         # Config, panel, scheduler
-│   ├── db/           # Database models and access
-│   └── utils/        # Helpers and leak protection
-├── backup/           # Backups storage
-├── logs/             # Runtime logs
-├── requirements.txt  # Python dependencies
-└── .env.example      # Environment template
+│   ├── bot/            # Telegram bot logic
+│   ├── web/            # Flask web application with setup wizard
+│   ├── core/           # Config, panel, scheduler with Psiphon protection
+│   ├── db/             # Database models and access
+│   └── utils/          # Helpers and leak protection
+├── backup/             # Backups storage
+├── logs/               # Runtime logs
+├── requirements.txt    # Python dependencies
+└── .env.example        # Environment template (fallback)
 ```
 
-## 💳 Payment Gateways (Optional)
+## 💳 Payment Gateway
 
-Payment systems are **completely optional**. Enable only the gateways you need or disable all for test mode.
-
-### Supported Gateways
-
-| Gateway | Settings | Rate Limit |
-|---------|----------|-----------|
-| **Zarinpal** | Requires merchant ID | Best for Iran |
-| **Pay.ir** | Requires API key | Alternative Iran |
-| **IDPay** | Requires API key | Alternative Iran |
-| **Tetra** | Requires merchant ID | Newer option |
+Tetra payment gateway supports multiple payment methods:
+- TON cryptocurrency payments
+- TRON cryptocurrency payments  
+- Card to Card (bank transfer) payments
 
 ### Configuration
-
-Set `PAYMENT_ENABLED=true` to enable the feature, then enable individual gateways:
 
 ```env
 # Enable/disable payment system
 PAYMENT_ENABLED=true
 
-# Zarinpal (optional)
-ZARINPAL_ENABLED=true
-ZARINPAL_MERCHANT_ID=your-merchant-id
-
-# Pay.ir (optional)
-PAYIR_ENABLED=false
-PAYIR_API_KEY=
-
-# IDPay (optional)
-IDPAY_ENABLED=false
-IDPAY_API_KEY=
-
-# Tetra (optional, https://tetra98.com/docs)
-TETRA_ENABLED=false
-TETRA_API_KEY=
+# Tetra (https://tetra98.com/docs)
+TETRA_ENABLED=true
+TETRA_API_KEY=your-tetra-api-key
 ```
 
 ### Disabling Payments
@@ -169,106 +142,100 @@ When payments are disabled:
 ## 🛠️ Running on Windows
 
 1. Install dependencies:
-```bat
-install.bat
+```cmd
+python bot.py install
 ```
 2. Edit `.env` if needed.
 3. Start the bot:
-```bat
-start.bat
+```cmd
+python bot.py start
 ```
 
 ## 🌍 Running on Linux/macOS
 
 1. Install dependencies:
 ```bash
-python manage.py install
+python bot.py install
 ```
 2. Start the bot:
 ```bash
-python manage.py start
+python bot.py start
 ```
 
-## 🚩 Notes
+Or use the interactive TUI:
+```bash
+python bot.py tui
+```
 
-- `manage.py` is the recommended launcher for both platforms.
-- `scripts/install.py` remains available as an optional TUI installer.
-- `.env.example` now includes the unified trial traffic settings.
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🛡️ Security Features
+
+- **Traffic Limit Enforcement**: Automatically terminates connections when traffic limits are reached
+- **Psiphon Abuse Detection**: Automatically detects and disables clients showing suspicious behavior
+- **Traffic Monitoring**: Real-time traffic tracking with alerts
+- **Leak Protection**: Built-in VPN leak detection
+- **Rate Limiting**: Nginx configuration includes rate limiting
+- **Secure Headers**: Nginx config includes security headers
+
+## 🛠️ Configuration Storage
+
+This project prefers `config.json` for deployment and stores secrets there.
+The `.env` file remains supported as a fallback for legacy deployments.
 
 ## 🛡️ Key Features
 
 - Telegram bot with purchase, trial, referral, wallet, and backup flows
-- Web UI for dashboards and admin pages
+- Web UI for setup, dashboards, and admin pages
 - 3x-ui panel client creation and config delivery
-- Payment gateway integration for Iranian users
+- Tetra payment gateway for TON/TRON/Card to Card payments
 - Traffic alerts and leak detection
 - MB/GB plan support and flexible trial limits
-- All docs merged into this single README
 
 ## 🧠 Changelog Summary
 
-- Documentation consolidated into `README.md`
-- Added `manage.py` for install/start on all platforms
-- Added `install.bat` and `start.bat` for Windows
-- Added cross-platform scripting and simplified launch flow
-- Improved `.env.example` with trial traffic unit support
+- Migrated to a single unified `bot.py` manager script
+- Added web-based setup wizard and JSON configuration support
+- Added Tetra-only payment gateway support
+- Added traffic limit enforcement and Psiphon prevention
+- Added Nginx deployment template and MIT license
 
-## 📌 Next Steps
+## 🚩 Notes
 
-After install, edit `.env`, then run:
-```bash
-python manage.py start
-```
+- `bot.py` is the unified launcher for all operations
+- Use `python bot.py setup` to configure the bot via web UI
+- Use `python bot.py start` to launch bot + web panel
+- Use `python bot.py stop` to stop the background process
+- Use `python bot.py status` to check whether the bot is running
+- Configuration is stored in `config.json` (preferred) or `.env` (fallback)
 
-If you want a text UI installer on Linux, use:
-```bash
-python scripts/install.py
-```
+## 🔧 Troubleshooting
 
-- Check TELEGRAM_BOT_TOKEN
-- Verify telegram proxy settings
-- Check internet connectivity
-
-### Panel connection failed
-- Verify PANEL_URL is correct
-- Check authentication credentials
-- Test PANEL_PROXY if using
-
-### Payment gateway errors
-- Verify merchant/API credentials
-- Check callback URL configuration
-- Review payment gateway logs
-
-## 📝 Database Models
-
-### User
-- telegram_id, email, language
-- is_reseller, is_admin, is_active
-- referral_code, referred_by
-
-### Subscription
-- user_id, client_id, plan
-- total_gb, used_gb
-- expiry_date, is_trial
-
-### Payment
-- user_id, amount, status
-- gateway, transaction_id
-
-### Wallet
-- user_id, balance
-- total_earned, total_spent
-
-### Referral
-- referrer_id, referred_user_id
-- commission, created_at
+- Verify `panel_url`, `panel_username`, `panel_password`, and `inbound_id`
+- Verify `telegram_bot_token` and Telegram proxy settings
+- If the web setup fails, confirm the Flask port is free and accessible
+- Check `bot.log` for startup issues when running in daemon mode
 
 ## 🔄 Scheduler Tasks
 
 Runs every hour:
-- Check traffic usage
+- Check traffic usage and terminate connections when limits exceeded
 - Send alerts for low traffic
 - Update subscription status
+
+Runs every 2 hours:
+- Check for Psiphon abuse patterns and disable suspicious clients
+
+Runs every 6 hours:
+- Check for VPN leaks and alert admins
+
+Runs every 2 hours:
+- Check for Psiphon abuse patterns and disable suspicious clients
+
+Runs every 6 hours:
+- Check for VPN leaks and alert admins
 - Process referral commissions
 
 ## 📖 API Documentation

@@ -2,19 +2,35 @@
 import os
 from ..utils.helpers import convert_traffic
 from ..utils.constants import TRAFFIC_UNIT_MB, TRAFFIC_UNIT_GB
+import json
+
+# Try to load from config.json first, fallback to environment variables
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config.json')
+
+def load_json_config():
+    """Load configuration from JSON file"""
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            pass
+    return {}
+
+json_config = load_json_config()
 
 # Panel Configuration
-PANEL_URL = os.getenv('PANEL_URL', 'https://your-panel-url')  # Use HTTPS
-USERNAME = os.getenv('PANEL_USERNAME', 'admin')
-PASSWORD = os.getenv('PANEL_PASSWORD', 'password')
-PANEL_PROXY = os.getenv('PANEL_PROXY')  # e.g., 'http://proxy:port' or 'socks5://proxy:port'
+PANEL_URL = json_config.get('panel_url') or os.getenv('PANEL_URL', 'https://your-panel-url')  # Use HTTPS
+USERNAME = json_config.get('panel_username') or os.getenv('PANEL_USERNAME', 'admin')
+PASSWORD = json_config.get('panel_password') or os.getenv('PANEL_PASSWORD', 'password')
+PANEL_PROXY = json_config.get('panel_proxy') or os.getenv('PANEL_PROXY')  # e.g., 'http://proxy:port' or 'socks5://proxy:port'
 
 # Telegram Configuration
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', 'your-bot-token')
-TELEGRAM_PROXY = os.getenv('TELEGRAM_PROXY')  # e.g., 'http://proxy:port' or 'socks5://proxy:port'
+TELEGRAM_BOT_TOKEN = json_config.get('telegram_bot_token') or os.getenv('TELEGRAM_BOT_TOKEN', 'your-bot-token')
+TELEGRAM_PROXY = json_config.get('telegram_proxy') or os.getenv('TELEGRAM_PROXY')  # e.g., 'http://proxy:port' or 'socks5://proxy:port'
 
 # Inbound ID
-INBOUND_ID = int(os.getenv('INBOUND_ID', '1'))
+INBOUND_ID = json_config.get('inbound_id', 1) if json_config.get('inbound_id') is not None else int(os.getenv('INBOUND_ID', '1'))
 
 # Plans - Support MB/GB mixed units
 PLANS = {
@@ -24,15 +40,15 @@ PLANS = {
 }
 
 # Database
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///vpn_bot.db')
+DATABASE_URL = json_config.get('database_url') or os.getenv('DATABASE_URL', 'sqlite:///vpn_bot.db')
 
 # Web App
-SECRET_KEY = os.getenv('SECRET_KEY', os.urandom(24).hex())  # Secure random key
-WEB_HOST = os.getenv('WEB_HOST', '0.0.0.0')
-WEB_PORT = int(os.getenv('WEB_PORT', '5000'))
+SECRET_KEY = json_config.get('secret_key') or os.getenv('SECRET_KEY', os.urandom(24).hex())  # Secure random key
+WEB_HOST = json_config.get('web_host') or os.getenv('WEB_HOST', '0.0.0.0')
+WEB_PORT = json_config.get('web_port', 5000) if json_config.get('web_port') is not None else int(os.getenv('WEB_PORT', '5000'))
 
 # Traffic Alert Threshold (GB)
-TRAFFIC_ALERT_GB = float(os.getenv('TRAFFIC_ALERT_GB', '1'))
+TRAFFIC_ALERT_GB = json_config.get('traffic_alert_gb', 1) if json_config.get('traffic_alert_gb') is not None else float(os.getenv('TRAFFIC_ALERT_GB', '1'))
 
 # Software Links
 SOFTWARE_LINKS = {
@@ -42,35 +58,23 @@ SOFTWARE_LINKS = {
     'mac': 'https://github.com/yanue/V2rayU/releases'
 }
 
-# Payment Gateways - Optional (enable/disable each one)
-PAYMENT_ENABLED = os.getenv('PAYMENT_ENABLED', 'true').lower() == 'true'
+# Payment Gateways - Tetra only
+PAYMENT_ENABLED = json_config.get('payment_enabled', True) if json_config.get('payment_enabled') is not None else os.getenv('PAYMENT_ENABLED', 'true').lower() == 'true'
 
-# Zarinpal
-ZARINPAL_ENABLED = os.getenv('ZARINPAL_ENABLED', 'false').lower() == 'true'
-ZARINPAL_MERCHANT_ID = os.getenv('ZARINPAL_MERCHANT_ID', '')
-
-# Pay.ir
-PAYIR_ENABLED = os.getenv('PAYIR_ENABLED', 'false').lower() == 'true'
-PAYIR_API_KEY = os.getenv('PAYIR_API_KEY', '')
-
-# IDPay
-IDPAY_ENABLED = os.getenv('IDPAY_ENABLED', 'false').lower() == 'true'
-IDPAY_API_KEY = os.getenv('IDPAY_API_KEY', '')
-
-# Tetra (https://tetra98.com/docs)
-TETRA_ENABLED = os.getenv('TETRA_ENABLED', 'false').lower() == 'true'
-TETRA_API_KEY = os.getenv('TETRA_API_KEY', '')
+# Tetra (https://tetra98.com/docs) - TON/TRON/Card to Card
+TETRA_ENABLED = json_config.get('tetra_enabled', False) if json_config.get('tetra_enabled') is not None else os.getenv('TETRA_ENABLED', 'false').lower() == 'true'
+TETRA_API_KEY = json_config.get('tetra_api_key') or os.getenv('TETRA_API_KEY', '')
 
 # Legacy: Backward compatibility
 PAYMENT_GATEWAY = os.getenv('PAYMENT_GATEWAY', '')  # Optional fallback
 
 # Trial Config Settings
-TRIAL_DURATION_HOURS = int(os.getenv('TRIAL_DURATION_HOURS', '2'))
-TRIAL_TRAFFIC_LIMIT = float(os.getenv('TRIAL_TRAFFIC_LIMIT', '1'))
-TRIAL_TRAFFIC_UNIT = os.getenv('TRIAL_TRAFFIC_UNIT', TRAFFIC_UNIT_GB)
+TRIAL_DURATION_HOURS = json_config.get('trial_duration_hours', 2) if json_config.get('trial_duration_hours') is not None else int(os.getenv('TRIAL_DURATION_HOURS', '2'))
+TRIAL_TRAFFIC_LIMIT = json_config.get('trial_traffic_limit', 1) if json_config.get('trial_traffic_limit') is not None else float(os.getenv('TRIAL_TRAFFIC_LIMIT', '1'))
+TRIAL_TRAFFIC_UNIT = json_config.get('trial_traffic_unit') or os.getenv('TRIAL_TRAFFIC_UNIT', TRAFFIC_UNIT_GB)
 
 # Referral Commission
-REFERRAL_COMMISSION_PERCENT = float(os.getenv('REFERRAL_COMMISSION_PERCENT', '10'))
+REFERRAL_COMMISSION_PERCENT = json_config.get('referral_commission_percent', 10) if json_config.get('referral_commission_percent') is not None else float(os.getenv('REFERRAL_COMMISSION_PERCENT', '10'))
 
 # Admin IDs (comma-separated)
-ADMIN_IDS = [int(x) for x in os.getenv('ADMIN_IDS', '').split(',') if x]
+ADMIN_IDS = json_config.get('admin_ids', []) if json_config.get('admin_ids') else [int(x) for x in os.getenv('ADMIN_IDS', '').split(',') if x]

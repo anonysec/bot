@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Setup - VPN Bot{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card-custom card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">🚀 VPN Bot Setup</h4>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-success">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST">
+                        <h5 class="text-primary mb-3">📊 Panel Configuration</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Panel URL</label>
+                                <input type="url" class="form-control" name="panel_url" value="{{ config.panel_url }}" placeholder="https://your-panel.com" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" name="panel_username" value="{{ config.panel_username }}" placeholder="admin" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="panel_password" value="{{ config.panel_password }}" placeholder="password" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Inbound ID</label>
+                            <input type="number" class="form-control" name="inbound_id" value="{{ config.inbound_id }}" min="1" required>
+                        </div>
+
+                        <h5 class="text-primary mb-3 mt-4">🤖 Telegram Configuration</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Bot Token</label>
+                            <input type="text" class="form-control" name="telegram_bot_token" value="{{ config.telegram_bot_token }}" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Admin IDs (comma-separated)</label>
+                            <input type="text" class="form-control" name="admin_ids" value="{{ config.admin_ids|join(', ') }}" placeholder="123456789, 987654321" required>
+                        </div>
+
+                        <h5 class="text-primary mb-3 mt-4">💳 Payment Configuration</h5>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="payment_enabled" id="payment_enabled" {% if config.payment_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="payment_enabled">
+                                    Enable Payment System
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="tetra_enabled" id="tetra_enabled" {% if config.tetra_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="tetra_enabled">
+                                    Enable Tetra Gateway (TON/TRON/Card to Card)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tetra API Key</label>
+                            <input type="text" class="form-control" name="tetra_api_key" value="{{ config.tetra_api_key }}" placeholder="your-tetra-api-key">
+                        </div>
+
+                        <h5 class="text-primary mb-3 mt-4">⚙️ Trial Configuration</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Duration (Hours)</label>
+                                <input type="number" class="form-control" name="trial_duration_hours" value="{{ config.trial_duration_hours }}" min="1" max="24">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Traffic Limit</label>
+                                <input type="number" class="form-control" name="trial_traffic_limit" value="{{ config.trial_traffic_limit }}" min="0.1" step="0.1">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Traffic Unit</label>
+                                <select class="form-control" name="trial_traffic_unit">
+                                    <option value="MB" {% if config.trial_traffic_unit == 'MB' %}selected{% endif %}>MB</option>
+                                    <option value="GB" {% if config.trial_traffic_unit == 'GB' %}selected{% endif %}>GB</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h5 class="text-primary mb-3 mt-4">🌐 Proxy Configuration</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Panel Proxy</label>
+                                <input type="text" class="form-control" name="panel_proxy" value="{{ config.panel_proxy }}" placeholder="socks5://proxy:1080">
+                                <small class="form-text text-muted">Proxy for panel connections (socks5/http)</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Telegram Proxy</label>
+                                <input type="text" class="form-control" name="telegram_proxy" value="{{ config.telegram_proxy }}" placeholder="socks5://proxy:1080">
+                                <small class="form-text text-muted">Proxy for Telegram bot (socks5/http)</small>
+                            </div>
+                        </div>
+
+                        <h5 class="text-primary mb-3 mt-4">🔧 Advanced Settings</h5>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Traffic Alert (GB)</label>
+                                <input type="number" class="form-control" name="traffic_alert_gb" value="{{ config.traffic_alert_gb }}" min="0.1" step="0.1">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Referral Commission (%)</label>
+                                <input type="number" class="form-control" name="referral_commission_percent" value="{{ config.referral_commission_percent }}" min="0" max="100">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Web Host</label>
+                                <input type="text" class="form-control" name="web_host" value="{{ config.web_host }}" placeholder="0.0.0.0">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Web Port</label>
+                                <input type="number" class="form-control" name="web_port" value="{{ config.web_port }}" min="1" max="65535">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Database URL</label>
+                            <input type="text" class="form-control" name="database_url" value="{{ config.database_url }}" placeholder="sqlite:///vpn_bot.db">
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">💾 Save Configuration</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

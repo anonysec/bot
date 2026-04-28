@@ -84,3 +84,43 @@ class XUIPanel:
         }
         response = self.session.post(url, data=data)
         return response.json()
+
+    def disable_client(self, email):
+        """Disable client by setting expiry time to now"""
+        self.ensure_login()
+        inbounds = self.get_inbounds()
+        for inbound in inbounds.get('obj', []):
+            if inbound.get('id') == INBOUND_ID:
+                clients = json.loads(inbound.get('settings', '{}')).get('clients', [])
+                for client in clients:
+                    if client.get('email') == email:
+                        client_id = client.get('id')
+                        # Set expiry time to now to disable the client
+                        expiry_time = int(datetime.now().timestamp() * 1000)  # milliseconds
+                        updates = {
+                            'settings': json.dumps({
+                                'clients': [{
+                                    'id': client_id,
+                                    'email': email,
+                                    'totalGB': client.get('totalGB', 0),
+                                    'expiryTime': expiry_time,  # Expire immediately
+                                    'enable': False  # Disable the client
+                                }]
+                            })
+                        }
+                        result = self.update_client(INBOUND_ID, client_id, updates)
+                        return result.get('success', False)
+        return False
+
+    def get_clients(self):
+        """Get all clients from the inbound"""
+        self.ensure_login()
+        inbounds = self.get_inbounds()
+        clients = []
+        for inbound in inbounds.get('obj', []):
+            if inbound.get('id') == INBOUND_ID:
+                inbound_clients = json.loads(inbound.get('settings', '{}')).get('clients', [])
+                for client in inbound_clients:
+                    client['inbound_id'] = inbound['id']
+                    clients.append(client)
+        return clients
