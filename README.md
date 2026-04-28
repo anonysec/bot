@@ -5,8 +5,10 @@ A complete Telegram bot + web panel for selling VPN configs with multi-panel man
 ## ✨ What’s Included
 
 - **Multi-Panel Management** - Single bot managing multiple 3x-ui panels simultaneously
-- **Per-Reseller Payments** - Each reseller has their own Tetra payment gateway configuration
-- Telegram bot for config purchase, trial access, referrals, wallet, and backups
+- **Per-Reseller Payments** - Each reseller has their own Tetra payment gateway configuration- **3x-ui Style Web Interface** - Modern, professional dashboard with dark theme
+- **Modern Subscription Pages** - Beautiful pricing cards with trial options (25MB/50MB for 1h)
+- **Decoy Landing Page** - Fake legitimate VPN site to mask bot purpose
+- **Percentage-Based Alerts** - Traffic alerts at 80% and critical at 95% usage- Telegram bot for config purchase, trial access, referrals, wallet, and backups
 - Flask web dashboard with setup wizard for easy configuration
 - 3x-ui panel integration with proxy support
 - Tetra payment gateway (TON/TRON/Card to Card payments)
@@ -205,8 +207,60 @@ The bot automatically:
 
 See `config.multi-panel-example.json` for a complete example configuration with multiple panels and resellers.
 
-## 🧩 Bot Manager Script
-- `bot.py` — Unified cross-platform installer/start/stop/status/TUI manager
+## 🎨 Web Interface
+
+### Modern 3x-ui Style Design
+The bot features a professional, modern web interface inspired by x-ui with:
+- **Dark theme** with blue accent colors
+- **3x-ui Dashboard** - Real-time stats, traffic monitoring, subscription overview
+- **Modern Pricing Page** - Beautiful subscription cards with annual/monthly plans
+- **Trial Options** - Users can choose between 25MB or 50MB for 1 hour free trial
+- **Decoy Landing Page** - Fake legitimate VPN service to maintain privacy
+- **Responsive Design** - Works on desktop, tablet, and mobile
+- **Real-time Alerts** - Percentage-based traffic warnings (80% and 95%)
+
+### Web Interface Routes
+- `/` or `/decoy` - Public landing page (decoy site)
+- `/dashboard` - Modern 3x-ui style dashboard (requires login)
+- `/subscriptions` - Beautiful subscription/pricing page
+- `/configs` - Download VPN configurations
+- `/backup` - Backup and restore settings
+- `/admin` - Admin panel for reseller/admin users
+
+### Features Included
+- **Traffic Monitoring** - Real-time usage percentage tracking
+- **Smart Alerts** - Notifications at 80% and 95% usage
+- **One-Click Trial** - Quick-start 25MB or 50MB trials
+- **Plan Comparison** - Feature comparison table
+- **FAQ Section** - Common questions answered
+- **Mobile Responsive** - Full mobile optimization
+
+## 🧪 Trial Configuration
+
+Trial settings are now optimized for affordability:
+- **Duration**: 1 hour (down from 2 hours)
+- **Data Options**: 
+  - 25MB option (lighter use)
+  - 50MB option (more generous)
+- **No Card Required**: Instant access
+- **Automatic Cleanup**: Trial configs automatically expire
+
+## 📊 Traffic Alerts (Percentage-Based)
+
+Since traffic is expensive, the system now uses percentage-based alerts:
+
+```json
+{
+  "traffic_alert_percent": 80,      // Alert when user hits 80%
+  "traffic_critical_percent": 95    // Critical warning at 95%
+}
+```
+
+**Features:**
+- Real-time percentage calculation
+- Dynamic alert colors (yellow at 80%, red at 95%)
+- API endpoint for alert checking
+- Automatic subscription termination at limits
 
 ## 🧠 Main Architecture
 
@@ -322,6 +376,12 @@ This project uses `config.json` exclusively for all configuration. The web setup
 
 ## 🧠 Changelog Summary
 
+- **3x-ui Web Interface** - Modern dark-themed dashboard with real-time traffic monitoring
+- **Modern Subscription Pages** - Beautiful pricing cards and plan comparison
+- **Decoy Landing Page** - Legitimate-looking VPN site for privacy
+- **Trial Options** - Users choose 25MB or 50MB for 1 hour (updated from 2h/1GB)
+- **Percentage-Based Alerts** - Traffic alerts at 80% and critical at 95% usage
+- **Traffic API** - Real-time alert endpoint for percentage-based monitoring
 - **JSON-Only Configuration** - Removed .env support, web setup is now the only configuration method
 - **Advanced TUI** - Redesigned terminal interface to match x-ui style with comprehensive menus
 - **Multi-Panel Management** - Single bot can now manage multiple 3x-ui panels simultaneously

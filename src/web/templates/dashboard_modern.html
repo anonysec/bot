@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - VPN Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e88e5;
+            --secondary: #0d47a1;
+            --success: #43a047;
+            --warning: #fb8500;
+            --danger: #d32f2f;
+            --dark-bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text-light: #e0e0e0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1a1a2e 100%);
+            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(10, 10, 10, 0.95);
+            border-bottom: 1px solid rgba(30, 136, 229, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #2196f3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .sidebar {
+            background: var(--card-bg);
+            border-right: 1px solid rgba(30, 136, 229, 0.1);
+            min-height: calc(100vh - 70px);
+            padding: 20px 0;
+            position: fixed;
+            width: 250px;
+            left: 0;
+            top: 70px;
+            overflow-y: auto;
+        }
+        
+        .sidebar .nav-link {
+            color: var(--text-light);
+            padding: 15px 20px;
+            margin: 5px 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(30, 136, 229, 0.1);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+            min-height: calc(100vh - 70px);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(33, 150, 243, 0.05) 100%);
+            border: 1px solid rgba(30, 136, 229, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(30, 136, 229, 0.2);
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .progress-bar {
+            background: var(--primary) !important;
+        }
+        
+        .progress {
+            background: rgba(30, 136, 229, 0.1);
+            height: 6px;
+            border-radius: 10px;
+        }
+        
+        .alert-warning {
+            background: rgba(251, 133, 0, 0.1);
+            border-color: var(--warning);
+            color: #ffb74d;
+        }
+        
+        .alert-danger {
+            background: rgba(211, 47, 47, 0.1);
+            border-color: var(--danger);
+            color: #ef5350;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #2196f3 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(30, 136, 229, 0.3);
+        }
+        
+        .subscription-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(30, 136, 229, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .subscription-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 24px rgba(30, 136, 229, 0.15);
+        }
+        
+        .plan-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .traffic-usage {
+            margin: 20px 0;
+        }
+        
+        .traffic-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(30, 136, 229, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            color: var(--success);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 15px 0;
+        }
+        
+        .expired {
+            opacity: 0.5;
+            color: var(--danger);
+        }
+        
+        h1 {
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        h3 {
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="bi bi-lightning-fill"></i> VPN Bot</a>
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-bell"></i> Notifications
+                </button>
+                <div class="dropdown">
+                    <a href="#" class="text-decoration-none text-light dropdown-toggle" id="userMenu" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userMenu">
+                        <li><a class="dropdown-item" href="#">Profile</a></li>
+                        <li><a class="dropdown-item" href="#">Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div style="display: flex;">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/subscriptions"><i class="bi bi-ticket-perferated"></i> Subscriptions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/configs"><i class="bi bi-shield-lock"></i> Configs</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Statistics</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="bi bi-person-plus"></i> Referrals</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="bi bi-wallet2"></i> Wallet</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/backup"><i class="bi bi-cloud-download"></i> Backups</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1>📊 Dashboard</h1>
+
+            <!-- Quick Stats -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-label">Active Subscriptions</div>
+                        <div class="stat-value">
+                            <i class="bi bi-check-circle-fill" style="color: var(--success);"></i>
+                            {{ subscriptions|length }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-label">Wallet Balance</div>
+                        <div class="stat-value" style="color: var(--success);">
+                            <i class="bi bi-cash-coin"></i>
+                            ${{ wallet.balance if wallet else 0 }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Used Traffic</div>
+                        <div class="stat-value">
+                            <i class="bi bi-arrow-down-circle"></i>
+                            {{ total_traffic }} GB
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-label">Account Status</div>
+                        <div class="stat-value" style="color: var(--success);">
+                            <i class="bi bi-lightning"></i>
+                            Active
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Subscriptions -->
+            <h3 style="margin-top: 40px;"><i class="bi bi-list-check"></i> Active Subscriptions</h3>
+            
+            {% for sub in subscriptions %}
+            <div class="subscription-card">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                        <span class="plan-badge">{{ sub.plan|upper }}</span>
+                        <div style="color: #999; font-size: 0.9rem; margin-bottom: 10px;">
+                            <i class="bi bi-calendar"></i> Expires: {{ sub.expiry_date.strftime('%Y-%m-%d') }}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="stat-value" style="font-size: 1.5rem;">{{ sub.total_gb }} GB</div>
+                        <small style="color: #999;">Total Allowance</small>
+                    </div>
+                </div>
+
+                <div class="traffic-usage">
+                    <div class="traffic-info">
+                        <span>Traffic Used: <strong>{{ sub.used_gb }} GB</strong></span>
+                        <span>Remaining: <strong>{{ (sub.total_gb - sub.used_gb)|round(2) }} GB</strong></span>
+                    </div>
+                    {% set progress = (sub.used_gb / sub.total_gb * 100)|round %}
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ progress }}%" 
+                             aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <small style="color: #999;">{{ progress }}% Used</small>
+                    
+                    {% if progress >= 95 %}
+                    <div class="alert alert-danger mt-2 mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        Critical: 95% traffic used! Subscription will expire soon.
+                    </div>
+                    {% elif progress >= 80 %}
+                    <div class="alert alert-warning mt-2 mb-0">
+                        <i class="bi bi-exclamation-circle"></i> 
+                        Warning: 80% traffic used.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary btn-sm">
+                        <i class="bi bi-download"></i> Config
+                    </button>
+                    <button class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-eye"></i> Details
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                No active subscriptions. <a href="/subscriptions" class="alert-link">Get started now!</a>
+            </div>
+            {% endfor %}
+
+            <!-- Quick Actions -->
+            <h3 style="margin-top: 40px;"><i class="bi bi-lightning"></i> Quick Actions</h3>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <a href="#" class="btn btn-primary w-100">
+                        <i class="bi bi-ticket-perferated"></i> Get Trial (25MB/1h)
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a href="/subscriptions" class="btn btn-outline-light w-100">
+                        <i class="bi bi-shop"></i> Buy Subscription
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a href="#" class="btn btn-outline-light w-100">
+                        <i class="bi bi-gift"></i> Referral Program
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

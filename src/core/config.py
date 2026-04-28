@@ -102,13 +102,28 @@ PAYMENT_ENABLED = json_config.get('payment_enabled', True) if json_config.get('p
 TETRA_ENABLED = json_config.get('tetra_enabled', False)
 TETRA_API_KEY = json_config.get('tetra_api_key', '')
 
-# Trial Config Settings
-TRIAL_DURATION_HOURS = json_config.get('trial_duration_hours', 2)
-TRIAL_TRAFFIC_LIMIT = json_config.get('trial_traffic_limit', 1)
-TRIAL_TRAFFIC_UNIT = json_config.get('trial_traffic_unit', TRAFFIC_UNIT_GB)
+# Trial Config Settings - Modern defaults (25MB or 50MB for 1 hour)
+TRIAL_DURATION_HOURS = json_config.get('trial_duration_hours', 1)  # 1 hour trial
+TRIAL_TRAFFIC_LIMIT = json_config.get('trial_traffic_limit', 25)  # 25MB default
+TRIAL_TRAFFIC_UNIT = json_config.get('trial_traffic_unit', TRAFFIC_UNIT_MB)  # Use MB
+TRIAL_OPTIONS = json_config.get('trial_options', ['25MB', '50MB'])  # User can choose
+
+# Traffic Alert Settings - Percentage-based (since traffic is expensive)
+TRAFFIC_ALERT_PERCENT = json_config.get('traffic_alert_percent', 80)  # Alert at 80% usage
+TRAFFIC_CRITICAL_PERCENT = json_config.get('traffic_critical_percent', 95)  # Critical at 95%
 
 # Referral Commission
 REFERRAL_COMMISSION_PERCENT = json_config.get('referral_commission_percent', 10)
+
+# Feature Flags
+FEATURES = json_config.get('features', {
+    'decoy_page': True,
+    'referrals': True,
+    'backups': True,
+    'traffic_monitor': True,
+    'wallet': True,
+    'stats': True
+})
 
 # Admin IDs
 ADMIN_IDS = json_config.get('admin_ids', [])

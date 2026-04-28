@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscriptions - VPN Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e88e5;
+            --secondary: #0d47a1;
+            --success: #43a047;
+            --warning: #fb8500;
+            --danger: #d32f2f;
+            --dark-bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text-light: #e0e0e0;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1a1a2e 100%);
+            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(10, 10, 10, 0.95);
+            border-bottom: 1px solid rgba(30, 136, 229, 0.2);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #2196f3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .container-wrapper {
+            padding: 40px 15px;
+        }
+        
+        h1 {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: white;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #999;
+            margin-bottom: 50px;
+        }
+        
+        .plan-card {
+            background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(33, 150, 243, 0.05) 100%);
+            border: 2px solid rgba(30, 136, 229, 0.2);
+            border-radius: 16px;
+            padding: 35px 25px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .plan-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-8px);
+            box-shadow: 0 16px 40px rgba(30, 136, 229, 0.25);
+        }
+        
+        .plan-card.featured {
+            border-color: var(--primary);
+            box-shadow: 0 16px 40px rgba(30, 136, 229, 0.25);
+            transform: scale(1.05);
+            background: linear-gradient(135deg, rgba(30, 136, 229, 0.2) 0%, rgba(33, 150, 243, 0.1) 100%);
+        }
+        
+        .badge-featured {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--primary) 0%, #2196f3 100%);
+            color: white;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .plan-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: white;
+        }
+        
+        .plan-description {
+            font-size: 0.9rem;
+            color: #999;
+            margin-bottom: 25px;
+        }
+        
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .plan-period {
+            font-size: 0.9rem;
+            color: #999;
+            margin-bottom: 30px;
+        }
+        
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 30px 0;
+            flex-grow: 1;
+            text-align: left;
+        }
+        
+        .plan-features li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(30, 136, 229, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+        }
+        
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .plan-features li:before {
+            content: "✓";
+            color: var(--success);
+            font-weight: 700;
+            font-size: 1.2rem;
+            min-width: 24px;
+        }
+        
+        .plan-button {
+            background: linear-gradient(135deg, var(--primary) 0%, #2196f3 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .plan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(30, 136, 229, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .plan-card.featured .plan-button {
+            padding: 14px 30px;
+            font-size: 1.1rem;
+        }
+        
+        .trial-section {
+            background: linear-gradient(135deg, rgba(67, 160, 71, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
+            border: 2px solid rgba(67, 160, 71, 0.2);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+        
+        .trial-section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--success);
+            margin-bottom: 15px;
+        }
+        
+        .trial-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .trial-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .trial-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(67, 160, 71, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .comparison-table {
+            background: var(--card-bg);
+            border: 1px solid rgba(30, 136, 229, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 50px;
+        }
+        
+        .comparison-table table {
+            margin: 0;
+        }
+        
+        .comparison-table th {
+            background: rgba(30, 136, 229, 0.1);
+            border-color: rgba(30, 136, 229, 0.2);
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .comparison-table td {
+            border-color: rgba(30, 136, 229, 0.1);
+            padding: 15px;
+        }
+        
+        .comparison-table .feature-name {
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        
+        .comparison-table .check {
+            color: var(--success);
+            font-weight: 700;
+        }
+        
+        .comparison-table .cross {
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/"><i class="bi bi-lightning-fill"></i> VPN Bot</a>
+            <a href="/" class="btn btn-outline-light btn-sm">← Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container-wrapper">
+        <div class="container">
+            <h1>Choose Your Plan</h1>
+            <p class="subtitle">Select the perfect plan for your needs. All plans include 24/7 support.</p>
+
+            <!-- Free Trial Section -->
+            <div class="trial-section">
+                <h2><i class="bi bi-gift"></i> Try For Free!</h2>
+                <p style="color: #999; font-size: 1.1rem; margin-bottom: 20px;">
+                    No credit card required. Get instant access with our free trial.
+                </p>
+                <div class="trial-options">
+                    <button class="trial-btn" onclick="selectTrial('25MB')">
+                        <i class="bi bi-play-fill"></i> Try 25MB / 1 Hour
+                    </button>
+                    <button class="trial-btn" onclick="selectTrial('50MB')">
+                        <i class="bi bi-play-fill"></i> Try 50MB / 1 Hour
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pricing Cards -->
+            <div class="row g-4">
+                <!-- Basic Plan -->
+                <div class="col-lg-4">
+                    <div class="plan-card">
+                        <div class="plan-icon">🚀</div>
+                        <div class="plan-name">Basic</div>
+                        <p class="plan-description">Perfect for casual users</p>
+                        <div class="plan-price">$4.99</div>
+                        <div class="plan-period">per month</div>
+                        <ul class="plan-features">
+                            <li>500MB Traffic</li>
+                            <li>30-Day Access</li>
+                            <li>All Servers</li>
+                            <li>Email Support</li>
+                        </ul>
+                        <button class="plan-button" onclick="buyPlan('basic')">
+                            <i class="bi bi-cart-check"></i> Choose Plan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Standard Plan (Featured) -->
+                <div class="col-lg-4">
+                    <div class="plan-card featured">
+                        <div class="badge-featured">Most Popular</div>
+                        <div class="plan-icon">⚡</div>
+                        <div class="plan-name">Standard</div>
+                        <p class="plan-description">Best for everyday use</p>
+                        <div class="plan-price">$9.99</div>
+                        <div class="plan-period">per month</div>
+                        <ul class="plan-features">
+                            <li>10GB Traffic</li>
+                            <li>30-Day Access</li>
+                            <li>All Servers</li>
+                            <li>Priority Support</li>
+                            <li>Auto-Renew</li>
+                        </ul>
+                        <button class="plan-button" onclick="buyPlan('standard')">
+                            <i class="bi bi-cart-check"></i> Choose Plan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Premium Plan -->
+                <div class="col-lg-4">
+                    <div class="plan-card">
+                        <div class="plan-icon">👑</div>
+                        <div class="plan-name">Premium</div>
+                        <p class="plan-description">For power users</p>
+                        <div class="plan-price">$19.99</div>
+                        <div class="plan-period">per month</div>
+                        <ul class="plan-features">
+                            <li>50GB Traffic</li>
+                            <li>30-Day Access</li>
+                            <li>All Servers</li>
+                            <li>24/7 Support</li>
+                            <li>Unlimited Renewals</li>
+                        </ul>
+                        <button class="plan-button" onclick="buyPlan('premium')">
+                            <i class="bi bi-cart-check"></i> Choose Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Annual Plans -->
+            <div style="margin-top: 60px;">
+                <h2 style="text-align: center; font-weight: 700; margin-bottom: 30px;">
+                    <i class="bi bi-calendar-event"></i> Annual Plans (Save 25%)
+                </h2>
+
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="plan-card">
+                            <div class="badge-featured" style="background: linear-gradient(135deg, var(--warning) 0%, #ff8f00 100%);">Save 25%</div>
+                            <div class="plan-icon">🚀</div>
+                            <div class="plan-name">Basic Annual</div>
+                            <p class="plan-description">12 months access</p>
+                            <div class="plan-price">$44.99</div>
+                            <div class="plan-period">per year</div>
+                            <ul class="plan-features">
+                                <li>6GB Total Traffic</li>
+                                <li>365-Day Access</li>
+                                <li>All Servers</li>
+                                <li>Email Support</li>
+                            </ul>
+                            <button class="plan-button" onclick="buyPlan('basic_annual')">
+                                <i class="bi bi-cart-check"></i> Choose Plan
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="plan-card featured">
+                            <div class="badge-featured">Best Value</div>
+                            <div class="plan-icon">⚡</div>
+                            <div class="plan-name">Standard Annual</div>
+                            <p class="plan-description">12 months access</p>
+                            <div class="plan-price">$89.99</div>
+                            <div class="plan-period">per year</div>
+                            <ul class="plan-features">
+                                <li>120GB Total Traffic</li>
+                                <li>365-Day Access</li>
+                                <li>All Servers</li>
+                                <li>Priority Support</li>
+                            </ul>
+                            <button class="plan-button" onclick="buyPlan('standard_annual')">
+                                <i class="bi bi-cart-check"></i> Choose Plan
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="plan-card">
+                            <div class="badge-featured" style="background: linear-gradient(135deg, var(--warning) 0%, #ff8f00 100%);">Save 25%</div>
+                            <div class="plan-icon">👑</div>
+                            <div class="plan-name">Premium Annual</div>
+                            <p class="plan-description">12 months access</p>
+                            <div class="plan-price">$179.99</div>
+                            <div class="plan-period">per year</div>
+                            <ul class="plan-features">
+                                <li>600GB Total Traffic</li>
+                                <li>365-Day Access</li>
+                                <li>All Servers</li>
+                                <li>24/7 Support</li>
+                            </ul>
+                            <button class="plan-button" onclick="buyPlan('premium_annual')">
+                                <i class="bi bi-cart-check"></i> Choose Plan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="comparison-table">
+                <table class="table table-dark mb-0">
+                    <thead>
+                        <tr>
+                            <th class="feature-name">Features</th>
+                            <th>Trial</th>
+                            <th>Basic</th>
+                            <th>Standard</th>
+                            <th>Premium</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="feature-name">Traffic Allowance</td>
+                            <td>25-50MB</td>
+                            <td>500MB</td>
+                            <td>10GB</td>
+                            <td>50GB</td>
+                        </tr>
+                        <tr>
+                            <td class="feature-name">Access Duration</td>
+                            <td>1 Hour</td>
+                            <td>30 Days</td>
+                            <td>30 Days</td>
+                            <td>30 Days</td>
+                        </tr>
+                        <tr>
+                            <td class="feature-name">Server Locations</td>
+                            <td><span class="check">✓</span></td>
+                            <td><span class="check">✓</span></td>
+                            <td><span class="check">✓</span></td>
+                            <td><span class="check">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td class="feature-name">Support</td>
+                            <td><span class="cross">—</span></td>
+                            <td>Email</td>
+                            <td>Priority</td>
+                            <td><span class="check">24/7</span></td>
+                        </tr>
+                        <tr>
+                            <td class="feature-name">Auto-Renew</td>
+                            <td><span class="cross">—</span></td>
+                            <td><span class="check">✓</span></td>
+                            <td><span class="check">✓</span></td>
+                            <td><span class="check">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td class="feature-name">Simultaneous Connections</td>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>5</td>
+                            <td>10</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- FAQ Section -->
+            <div style="margin-top: 60px; text-align: center;">
+                <h2 style="font-weight: 700; margin-bottom: 30px; color: white;">Frequently Asked Questions</h2>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div style="background: var(--card-bg); border: 1px solid rgba(30, 136, 229, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: left;">
+                            <h5 style="color: var(--primary); margin-bottom: 10px;">💳 Can I upgrade my plan?</h5>
+                            <p style="color: #999; margin: 0;">Yes! You can upgrade anytime. We'll prorate the difference.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div style="background: var(--card-bg); border: 1px solid rgba(30, 136, 229, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: left;">
+                            <h5 style="color: var(--primary); margin-bottom: 10px;">🔄 Do you have a refund policy?</h5>
+                            <p style="color: #999; margin: 0;">30-day money-back guarantee on all plans.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectTrial(size) {
+            alert('Starting ' + size + ' trial...');
+            // Make API call to start trial
+        }
+
+        function buyPlan(planId) {
+            console.log('Buying plan:', planId);
+            // Redirect to payment
+            window.location.href = '/payment?plan=' + planId;
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

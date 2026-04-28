@@ -31,18 +31,43 @@ def load_config():
         'tetra_enabled': False,
         'tetra_api_key': '',
         'payment_enabled': True,
-        'trial_duration_hours': 2,
-        'trial_traffic_limit': 1,
-        'trial_traffic_unit': 'GB',
-        'traffic_alert_gb': 1,
+        'trial_duration_hours': 1,
+        'trial_traffic_limit': 25,
+        'trial_traffic_unit': 'MB',
+        'trial_options': ['25MB', '50MB'],
+        'traffic_alert_percent': 80,
+        'traffic_critical_percent': 95,
         'referral_commission_percent': 10,
         'panel_proxy': '',
         'telegram_proxy': '',
         'web_host': '0.0.0.0',
         'web_port': 5000,
         'database_url': 'sqlite:///vpn_bot.db',
-        'secret_key': os.urandom(24).hex()
+        'secret_key': os.urandom(24).hex(),
+        'features': {
+            'decoy_page': True,
+            'referrals': True,
+            'backups': True,
+            'traffic_monitor': True,
+            'wallet': True,
+            'stats': True
+        }
     }
+
+def get_traffic_percentage(used_gb, total_gb):
+    """Calculate traffic usage percentage"""
+    if total_gb <= 0:
+        return 0
+    return (used_gb / total_gb) * 100
+
+def get_traffic_status(percentage):
+    """Get traffic status based on percentage"""
+    if percentage >= 95:
+        return {'status': 'critical', 'color': 'danger', 'message': 'Critical: 95% traffic used!'}
+    elif percentage >= 80:
+        return {'status': 'warning', 'color': 'warning', 'message': 'Warning: 80% traffic used.'}
+    else:
+        return {'status': 'normal', 'color': 'success', 'message': 'Normal'}
 
 def save_config(config):
     """Save configuration to JSON file"""
@@ -222,6 +247,89 @@ def user_stats():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+# New Routes for 3x-ui Style Interface
+
+@app.route('/decoy')
+def decoy():
+    """Fake landing page for privacy"""
+    config = load_config()
+    if not config.get('features', {}).get('decoy_page', True):
+        return redirect(url_for('login'))
+    return render_template('decoy.html')
+
+@app.route('/dashboard')
+def dashboard_modern():
+    """Modern 3x-ui style dashboard"""
+    if setup_required():
+        return redirect(url_for('setup'))
+    if 'user_id' not in session:
+        return redirect(url_for('decoy'))
+    
+    db = SessionLocal()
+    user = get_user_by_id(db, session['user_id'])
+    subs = get_user_subscriptions(db, session['user_id'])
+    wallet = db.query(Wallet).filter_by(user_id=session['user_id']).first()
+    
+    # Calculate total traffic with percentage
+    total_traffic = sum(s.total_gb for s in subs)
+    used_traffic = sum(s.used_gb for s in subs)
+    
+    # Add percentage calculation to each subscription
+    for sub in subs:
+        sub.usage_percent = get_traffic_percentage(sub.used_gb, sub.total_gb)
+        sub.traffic_status = get_traffic_status(sub.usage_percent)
+    
+    db.close()
+    return render_template('dashboard_modern.html', 
+                          user=user, 
+                          subscriptions=subs, 
+                          wallet=wallet,
+                          total_traffic=total_traffic,
+                          used_traffic=used_traffic)
+
+@app.route('/subscriptions')
+def subscriptions_modern():
+    """Modern subscription page with 3x-ui style"""
+    if setup_required():
+        return redirect(url_for('setup'))
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    config = load_config()
+    return render_template('subscriptions_modern.html', config=config)
+
+@app.route('/api/traffic-alert', methods=['GET'])
+@login_required
+def traffic_alert():
+    """API endpoint to check traffic alerts"""
+    config = load_config()
+    alert_percent = config.get('traffic_alert_percent', 80)
+    critical_percent = config.get('traffic_critical_percent', 95)
+    
+    db = SessionLocal()
+    subs = get_user_subscriptions(db, session['user_id'])
+    
+    alerts = []
+    for sub in subs:
+        percentage = get_traffic_percentage(sub.used_gb, sub.total_gb)
+        if percentage >= critical_percent:
+            alerts.append({
+                'type': 'critical',
+                'plan': sub.plan,
+                'percentage': round(percentage, 2),
+                'message': f'Critical: Your {sub.plan} plan is {percentage:.1f}% full!'
+            })
+        elif percentage >= alert_percent:
+            alerts.append({
+                'type': 'warning',
+                'plan': sub.plan,
+                'percentage': round(percentage, 2),
+                'message': f'Warning: Your {sub.plan} plan is {percentage:.1f}% full!'
+            })
+    
+    db.close()
+    return jsonify({'alerts': alerts, 'has_alerts': len(alerts) > 0})
 
 if __name__ == '__main__':
     app.run(host=WEB_HOST, port=WEB_PORT, debug=False, use_reloader=False)
