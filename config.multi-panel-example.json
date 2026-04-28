@@ -1,0 +1,61 @@
+{
+  "panels": [
+    {
+      "id": "panel1",
+      "url": "https://panel1.example.com",
+      "username": "admin",
+      "password": "password123",
+      "inbound_id": 1,
+      "proxy": "",
+      "enabled": true
+    },
+    {
+      "id": "panel2",
+      "url": "https://panel2.example.com",
+      "username": "admin",
+      "password": "password456",
+      "inbound_id": 1,
+      "proxy": "",
+      "enabled": true
+    }
+  ],
+  "resellers": [
+    {
+      "id": "reseller1",
+      "name": "Reseller One",
+      "telegram_ids": [123456789],
+      "panels": ["panel1"],
+      "payments": {
+        "tetra": {
+          "enabled": true,
+          "api_key": "tetra_api_key_for_reseller1"
+        }
+      },
+      "enabled": true
+    },
+    {
+      "id": "reseller2",
+      "name": "Reseller Two",
+      "telegram_ids": [987654321],
+      "panels": ["panel2"],
+      "payments": {
+        "tetra": {
+          "enabled": true,
+          "api_key": "tetra_api_key_for_reseller2"
+        }
+      },
+      "enabled": true
+    }
+  ],
+  "telegram_bot_token": "your_bot_token_here",
+  "payment_enabled": true,
+  "trial_duration_hours": 2,
+  "trial_traffic_limit": 1,
+  "trial_traffic_unit": "GB",
+  "traffic_alert_gb": 1,
+  "referral_commission_percent": 10,
+  "telegram_proxy": "",
+  "web_host": "0.0.0.0",
+  "web_port": 5000,
+  "database_url": "sqlite:///vpn_bot.db"
+}

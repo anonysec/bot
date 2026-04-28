@@ -20,6 +20,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     referral_code = Column(String, unique=True)
     referred_by = Column(Integer)  # user_id of referrer
+    reseller_id = Column(String, default='default')  # Which reseller this user belongs to
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Wallet(Base):
@@ -51,6 +52,7 @@ class Subscription(Base):
     used_gb = Column(Float, default=0)
     expiry_date = Column(DateTime)
     is_trial = Column(Boolean, default=False)
+    panel_id = Column(String, default='default')  # Which panel this subscription belongs to
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Reseller(Base):
@@ -139,8 +141,8 @@ def update_balance(db, user_id, amount):
     return None
 
 # Subscription functions
-def create_subscription(db, user_id, client_id, plan, total_gb, expiry_date, is_trial=False):
-    sub = Subscription(user_id=user_id, client_id=client_id, plan=plan, total_gb=total_gb, expiry_date=expiry_date, is_trial=is_trial)
+def create_subscription(db, user_id, client_id, plan, total_gb, expiry_date, is_trial=False, panel_id='default'):
+    sub = Subscription(user_id=user_id, client_id=client_id, plan=plan, total_gb=total_gb, expiry_date=expiry_date, is_trial=is_trial, panel_id=panel_id)
     db.add(sub)
     db.commit()
     db.refresh(sub)

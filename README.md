@@ -1,9 +1,11 @@
 # 🌐 VPN Selling Bot for 3x-ui Panel
 
-A complete Telegram bot + web panel for selling VPN configs with Tetra payment gateway (TON/TRON/Card to Card), referrals, traffic alerts, backups, and admin management.
+A complete Telegram bot + web panel for selling VPN configs with multi-panel management, per-reseller payments, Tetra gateway (TON/TRON/Card to Card), referrals, traffic alerts, backups, and admin management.
 
 ## ✨ What’s Included
 
+- **Multi-Panel Management** - Single bot managing multiple 3x-ui panels simultaneously
+- **Per-Reseller Payments** - Each reseller has their own Tetra payment gateway configuration
 - Telegram bot for config purchase, trial access, referrals, wallet, and backups
 - Flask web dashboard with setup wizard for easy configuration
 - 3x-ui panel integration with proxy support
@@ -11,8 +13,8 @@ A complete Telegram bot + web panel for selling VPN configs with Tetra payment g
 - Flexible traffic plans with MB/GB support
 - Traffic alerting and leak protection
 - Psiphon abuse detection and prevention
-- Admin/reseller management
-- Backup and restore
+- Admin/reseller management with isolated access
+- Backup and restore functionality
 - Single unified launcher for Linux and Windows
 - Nginx configuration included
 
@@ -40,12 +42,17 @@ python bot.py start
 
 ### Alternative Installation
 
-Use the interactive TUI:
+Use the advanced TUI (x-ui style interface):
 ```bash
 python bot.py tui
 ```
 
-This provides a menu-driven interface for all operations.
+This provides a comprehensive menu-driven interface with:
+- 📊 System Status monitoring
+- ⚙️ Configuration management
+- 🔧 Panel management tools
+- 👥 User administration
+- 🚀 Bot control (start/stop/restart)
 
 ## ▶️ Start the Bot
 
@@ -61,31 +68,142 @@ python bot.py tui
 
 ## 📋 Configuration
 
-Use the web setup wizard first to create `config.json`:
+**JSON Configuration Only (No .env support)**
+
+This bot uses JSON configuration exclusively. Use the web setup wizard to configure everything:
+
 ```bash
 python bot.py setup
 ```
+Then open http://localhost:5000/setup in your browser to configure multiple panels and resellers.
 
-If you prefer environment variables, create `.env` from `.env.example` and set at least:
-```env
-PANEL_URL=https://your-panel.com
-PANEL_USERNAME=admin
-PANEL_PASSWORD=your-password
-INBOUND_ID=1
-TELEGRAM_BOT_TOKEN=your-bot-token
-ADMIN_IDS=123456789
-PAYMENT_GATEWAY=tetra
-TETRA_API_KEY=your-tetra-api-key
-TRIAL_TRAFFIC_LIMIT=1
-TRIAL_TRAFFIC_UNIT=GB
-TRAFFIC_ALERT_GB=1
+**Configuration Structure:**
+```json
+{
+  "panels": [
+    {
+      "id": "panel1",
+      "url": "https://panel1.example.com",
+      "username": "admin",
+      "password": "password123",
+      "inbound_id": 1,
+      "proxy": "",
+      "enabled": true
+    }
+  ],
+  "resellers": [
+    {
+      "id": "reseller1",
+      "name": "Reseller One",
+      "telegram_ids": [123456789],
+      "panels": ["panel1"],
+      "payments": {
+        "tetra": {
+          "enabled": true,
+          "api_key": "tetra_key_for_reseller"
+        }
+      },
+      "enabled": true
+    }
+  ],
+  "telegram_bot_token": "your-bot-token",
+  "payment_enabled": true,
+  "trial_duration_hours": 2,
+  "trial_traffic_limit": 1,
+  "trial_traffic_unit": "GB"
+}
 ```
 
-### Proxy Settings
-```env
-PANEL_PROXY=socks5://proxy:1080
-TELEGRAM_PROXY=socks5://proxy:1080
+## 🏢 Multi-Panel & Multi-Reseller Management
+
+This bot supports managing multiple 3x-ui panels simultaneously, with each reseller having their own payment gateway configuration.
+
+### Configuration Structure
+
+The new configuration supports multiple panels and resellers:
+
+```json
+{
+  "panels": [
+    {
+      "id": "panel1",
+      "url": "https://panel1.example.com",
+      "username": "admin",
+      "password": "password123",
+      "inbound_id": 1,
+      "proxy": "socks5://proxy:1080",
+      "enabled": true
+    },
+    {
+      "id": "panel2", 
+      "url": "https://panel2.example.com",
+      "username": "admin",
+      "password": "password456",
+      "inbound_id": 1,
+      "enabled": true
+    }
+  ],
+  "resellers": [
+    {
+      "id": "reseller1",
+      "name": "Reseller One",
+      "telegram_ids": [123456789, 987654321],
+      "panels": ["panel1"],
+      "payments": {
+        "tetra": {
+          "enabled": true,
+          "api_key": "tetra_key_for_reseller1"
+        }
+      },
+      "enabled": true
+    },
+    {
+      "id": "reseller2",
+      "name": "Reseller Two", 
+      "telegram_ids": [111222333],
+      "panels": ["panel2"],
+      "payments": {
+        "tetra": {
+          "enabled": true,
+          "api_key": "tetra_key_for_reseller2"
+        }
+      },
+      "enabled": true
+    }
+  ],
+  "telegram_bot_token": "your-bot-token",
+  "payment_enabled": true,
+  "trial_duration_hours": 2,
+  "trial_traffic_limit": 1,
+  "trial_traffic_unit": "GB"
+}
 ```
+
+### How It Works
+
+- **Users are assigned to resellers** based on their `reseller_id` in the database
+- **Each reseller has their own payment configuration** (separate Tetra API keys)
+- **Resellers can access specific panels** as defined in their configuration
+- **Load balancing** automatically distributes users across available panels
+- **Per-reseller admin control** - each reseller only sees their own users and panels
+
+### Running Multiple Resellers
+
+Each reseller runs the same bot instance but with different configurations:
+
+```bash
+# All resellers use the same bot, but users are segregated by reseller_id
+python bot.py start
+```
+
+The bot automatically:
+- Routes users to their assigned reseller's panels
+- Uses the correct payment gateway for each reseller
+- Provides admin access only to the appropriate reseller admins
+
+### Example Configuration
+
+See `config.multi-panel-example.json` for a complete example configuration with multiple panels and resellers.
 
 ## 🧩 Bot Manager Script
 - `bot.py` — Unified cross-platform installer/start/stop/status/TUI manager
@@ -182,11 +300,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🛠️ Configuration Storage
 
-This project prefers `config.json` for deployment and stores secrets there.
-The `.env` file remains supported as a fallback for legacy deployments.
+This project uses `config.json` exclusively for all configuration. The web setup wizard provides a complete interface for configuring:
+
+- Multiple 3x-ui panels with different credentials
+- Per-reseller payment gateway configurations
+- Panel assignments and load balancing
+- Admin access controls
+
+**No .env support** - All configuration must be done through the web interface.
 
 ## 🛡️ Key Features
 
+- **Multi-Panel Management** - Single bot managing multiple 3x-ui panels
+- **Per-Reseller Payments** - Isolated payment configurations per reseller
 - Telegram bot with purchase, trial, referral, wallet, and backup flows
 - Web UI for setup, dashboards, and admin pages
 - 3x-ui panel client creation and config delivery
@@ -196,6 +322,10 @@ The `.env` file remains supported as a fallback for legacy deployments.
 
 ## 🧠 Changelog Summary
 
+- **JSON-Only Configuration** - Removed .env support, web setup is now the only configuration method
+- **Advanced TUI** - Redesigned terminal interface to match x-ui style with comprehensive menus
+- **Multi-Panel Management** - Single bot can now manage multiple 3x-ui panels simultaneously
+- **Per-Reseller Payments** - Each reseller has isolated payment gateway configurations
 - Migrated to a single unified `bot.py` manager script
 - Added web-based setup wizard and JSON configuration support
 - Added Tetra-only payment gateway support
@@ -205,18 +335,21 @@ The `.env` file remains supported as a fallback for legacy deployments.
 ## 🚩 Notes
 
 - `bot.py` is the unified launcher for all operations
-- Use `python bot.py setup` to configure the bot via web UI
+- Use `python bot.py setup` to configure everything via web UI (no .env support)
 - Use `python bot.py start` to launch bot + web panel
 - Use `python bot.py stop` to stop the background process
 - Use `python bot.py status` to check whether the bot is running
-- Configuration is stored in `config.json` (preferred) or `.env` (fallback)
+- Use `python bot.py tui` for advanced x-ui style terminal interface
+- Configuration is stored exclusively in `config.json`
 
 ## 🔧 Troubleshooting
 
-- Verify `panel_url`, `panel_username`, `panel_password`, and `inbound_id`
-- Verify `telegram_bot_token` and Telegram proxy settings
-- If the web setup fails, confirm the Flask port is free and accessible
-- Check `bot.log` for startup issues when running in daemon mode
+- **Multi-Panel Setup**: Ensure all panel URLs are accessible and credentials are correct
+- **Single Panel**: Verify `panel_url`, `panel_username`, `panel_password`, and `inbound_id`
+- **Telegram**: Verify `telegram_bot_token` and Telegram proxy settings
+- **Web Setup**: Confirm the Flask port is free and accessible
+- **Daemon Mode**: Check `bot.log` for startup issues
+- **Payments**: Verify Tetra API keys are correct for each reseller
 
 ## 🔄 Scheduler Tasks
 

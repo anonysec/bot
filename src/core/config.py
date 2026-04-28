@@ -1,17 +1,22 @@
-# config.py
+# config.py - JSON-only configuration
 import os
 from ..utils.helpers import convert_traffic
 from ..utils.constants import TRAFFIC_UNIT_MB, TRAFFIC_UNIT_GB
 import json
 
-# Try to load from config.json first, fallback to environment variables
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config.json')
+# Global config file path - can be overridden
+_config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config.json')
+
+def set_config_file(config_file):
+    """Set the configuration file path"""
+    global _config_file
+    _config_file = config_file
 
 def load_json_config():
     """Load configuration from JSON file"""
-    if os.path.exists(CONFIG_FILE):
+    if os.path.exists(_config_file):
         try:
-            with open(CONFIG_FILE, 'r') as f:
+            with open(_config_file, 'r') as f:
                 return json.load(f)
         except:
             pass
@@ -19,36 +24,68 @@ def load_json_config():
 
 json_config = load_json_config()
 
-# Panel Configuration
-PANEL_URL = json_config.get('panel_url') or os.getenv('PANEL_URL', 'https://your-panel-url')  # Use HTTPS
-USERNAME = json_config.get('panel_username') or os.getenv('PANEL_USERNAME', 'admin')
-PASSWORD = json_config.get('panel_password') or os.getenv('PANEL_PASSWORD', 'password')
-PANEL_PROXY = json_config.get('panel_proxy') or os.getenv('PANEL_PROXY')  # e.g., 'http://proxy:port' or 'socks5://proxy:port'
+# Panel Configuration - Support multiple panels
+PANELS = json_config.get('panels', [])
+if not PANELS:
+    # Default single panel configuration
+    PANELS = [{
+        'id': 'default',
+        'url': 'https://your-panel-url',
+        'username': 'admin',
+        'password': 'password',
+        'proxy': '',
+        'inbound_id': 1,
+        'enabled': True
+    }]
+
+# For backward compatibility - use first enabled panel as default
+DEFAULT_PANEL = next((p for p in PANELS if p.get('enabled', True)), PANELS[0]) if PANELS else None
+PANEL_URL = DEFAULT_PANEL['url'] if DEFAULT_PANEL else 'https://your-panel-url'
+USERNAME = DEFAULT_PANEL['username'] if DEFAULT_PANEL else 'admin'
+PASSWORD = DEFAULT_PANEL['password'] if DEFAULT_PANEL else 'password'
+PANEL_PROXY = DEFAULT_PANEL.get('proxy', '')
+INBOUND_ID = DEFAULT_PANEL.get('inbound_id', 1)
 
 # Telegram Configuration
-TELEGRAM_BOT_TOKEN = json_config.get('telegram_bot_token') or os.getenv('TELEGRAM_BOT_TOKEN', 'your-bot-token')
-TELEGRAM_PROXY = json_config.get('telegram_proxy') or os.getenv('TELEGRAM_PROXY')  # e.g., 'http://proxy:port' or 'socks5://proxy:port'
+TELEGRAM_BOT_TOKEN = json_config.get('telegram_bot_token', 'your-bot-token')
+TELEGRAM_PROXY = json_config.get('telegram_proxy', '')  # e.g., 'http://proxy:port' or 'socks5://proxy:port'
 
-# Inbound ID
-INBOUND_ID = json_config.get('inbound_id', 1) if json_config.get('inbound_id') is not None else int(os.getenv('INBOUND_ID', '1'))
+# Resellers Configuration - Each reseller can have their own payment settings
+RESELLERS = json_config.get('resellers', [])
 
-# Plans - Support MB/GB mixed units
-PLANS = {
-    'basic': {'name': 'Basic (500MB)', 'traffic': 500, 'unit': TRAFFIC_UNIT_MB, 'price': 5, 'name_fa': 'پایه (500 مگ)', 'duration_days': 30},
-    'standard': {'name': 'Standard (10GB)', 'traffic': 10, 'unit': TRAFFIC_UNIT_GB, 'price': 15, 'name_fa': 'استاندارد (10 گیگ)', 'duration_days': 30},
-    'premium': {'name': 'Premium (50GB)', 'traffic': 50, 'unit': TRAFFIC_UNIT_GB, 'price': 20, 'name_fa': 'پریمیوم (50 گیگ)', 'duration_days': 30}
-}
+# Payment Configuration - Support per-reseller payments
+PAYMENTS = json_config.get('payments', {})
+
+# For backward compatibility - use global payment settings if no resellers defined
+if not RESELLERS:
+    RESELLERS = [{
+        'id': 'default',
+        'name': 'Default Reseller',
+        'telegram_ids': json_config.get('admin_ids', []),
+        'panels': [panel['id'] for panel in PANELS],
+        'payments': {
+            'tetra': {
+                'enabled': json_config.get('tetra_enabled', False),
+                'api_key': json_config.get('tetra_api_key', '')
+            }
+        },
+        'enabled': True
+    }]
+
+# Global payment settings for backward compatibility
+TETRA_ENABLED = PAYMENTS.get('tetra', {}).get('enabled', json_config.get('tetra_enabled', False))
+TETRA_API_KEY = PAYMENTS.get('tetra', {}).get('api_key', json_config.get('tetra_api_key', ''))
 
 # Database
-DATABASE_URL = json_config.get('database_url') or os.getenv('DATABASE_URL', 'sqlite:///vpn_bot.db')
+DATABASE_URL = json_config.get('database_url', 'sqlite:///vpn_bot.db')
 
 # Web App
-SECRET_KEY = json_config.get('secret_key') or os.getenv('SECRET_KEY', os.urandom(24).hex())  # Secure random key
-WEB_HOST = json_config.get('web_host') or os.getenv('WEB_HOST', '0.0.0.0')
-WEB_PORT = json_config.get('web_port', 5000) if json_config.get('web_port') is not None else int(os.getenv('WEB_PORT', '5000'))
+SECRET_KEY = json_config.get('secret_key', os.urandom(24).hex())  # Secure random key
+WEB_HOST = json_config.get('web_host', '0.0.0.0')
+WEB_PORT = json_config.get('web_port', 5000)
 
 # Traffic Alert Threshold (GB)
-TRAFFIC_ALERT_GB = json_config.get('traffic_alert_gb', 1) if json_config.get('traffic_alert_gb') is not None else float(os.getenv('TRAFFIC_ALERT_GB', '1'))
+TRAFFIC_ALERT_GB = json_config.get('traffic_alert_gb', 1)
 
 # Software Links
 SOFTWARE_LINKS = {
@@ -62,19 +99,16 @@ SOFTWARE_LINKS = {
 PAYMENT_ENABLED = json_config.get('payment_enabled', True) if json_config.get('payment_enabled') is not None else os.getenv('PAYMENT_ENABLED', 'true').lower() == 'true'
 
 # Tetra (https://tetra98.com/docs) - TON/TRON/Card to Card
-TETRA_ENABLED = json_config.get('tetra_enabled', False) if json_config.get('tetra_enabled') is not None else os.getenv('TETRA_ENABLED', 'false').lower() == 'true'
-TETRA_API_KEY = json_config.get('tetra_api_key') or os.getenv('TETRA_API_KEY', '')
-
-# Legacy: Backward compatibility
-PAYMENT_GATEWAY = os.getenv('PAYMENT_GATEWAY', '')  # Optional fallback
+TETRA_ENABLED = json_config.get('tetra_enabled', False)
+TETRA_API_KEY = json_config.get('tetra_api_key', '')
 
 # Trial Config Settings
-TRIAL_DURATION_HOURS = json_config.get('trial_duration_hours', 2) if json_config.get('trial_duration_hours') is not None else int(os.getenv('TRIAL_DURATION_HOURS', '2'))
-TRIAL_TRAFFIC_LIMIT = json_config.get('trial_traffic_limit', 1) if json_config.get('trial_traffic_limit') is not None else float(os.getenv('TRIAL_TRAFFIC_LIMIT', '1'))
-TRIAL_TRAFFIC_UNIT = json_config.get('trial_traffic_unit') or os.getenv('TRIAL_TRAFFIC_UNIT', TRAFFIC_UNIT_GB)
+TRIAL_DURATION_HOURS = json_config.get('trial_duration_hours', 2)
+TRIAL_TRAFFIC_LIMIT = json_config.get('trial_traffic_limit', 1)
+TRIAL_TRAFFIC_UNIT = json_config.get('trial_traffic_unit', TRAFFIC_UNIT_GB)
 
 # Referral Commission
-REFERRAL_COMMISSION_PERCENT = json_config.get('referral_commission_percent', 10) if json_config.get('referral_commission_percent') is not None else float(os.getenv('REFERRAL_COMMISSION_PERCENT', '10'))
+REFERRAL_COMMISSION_PERCENT = json_config.get('referral_commission_percent', 10)
 
-# Admin IDs (comma-separated)
-ADMIN_IDS = json_config.get('admin_ids', []) if json_config.get('admin_ids') else [int(x) for x in os.getenv('ADMIN_IDS', '').split(',') if x]
+# Admin IDs
+ADMIN_IDS = json_config.get('admin_ids', [])

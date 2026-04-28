@@ -18,8 +18,6 @@ import json
 # Configuration
 ROOT = Path(__file__).resolve().parent
 VENV_DIR = ROOT / 'venv'
-ENV_FILE = ROOT / '.env'
-ENV_EXAMPLE = ROOT / '.env.example'
 REQ_FILE = ROOT / 'requirements.txt'
 SRC_MAIN = ROOT / 'src' / 'main.py'
 PID_FILE = ROOT / 'bot.pid'
@@ -54,15 +52,6 @@ def install_dependencies():
     subprocess.check_call([py, '-m', 'pip', 'install', '--upgrade', 'pip'])
     subprocess.check_call([py, '-m', 'pip', 'install', '-r', str(REQ_FILE)])
     print('✓ Dependencies installed.')
-
-def create_env_file():
-    if ENV_FILE.exists():
-        print('✓ .env already exists.')
-        return
-    if not ENV_EXAMPLE.exists():
-        raise FileNotFoundError('.env.example not found')
-    shutil.copy(ENV_EXAMPLE, ENV_FILE)
-    print('✓ Created .env from .env.example.')
 
 def save_pid(pid):
     with open(PID_FILE, 'w') as f:
@@ -122,18 +111,19 @@ def start(args):
         print(f'⚠️  Bot is already running (PID: {existing_proc.pid})')
         return
 
-    if not ENV_FILE.exists():
-        print('⚠️  .env not found. Creating from example...')
-        create_env_file()
+    if not CONFIG_FILE.exists():
+        print('⚠️  config.json not found. Please run: python bot.py setup')
+        return
 
     py = python_executable()
     print('🚀 Starting VPN Bot...')
 
     if args.daemon or not is_windows():
         # Daemon mode for Linux/macOS
+        config_arg = str(CONFIG_FILE.relative_to(ROOT)) if CONFIG_FILE != ROOT / 'config.json' else 'config.json'
         with open(ROOT / 'bot.log', 'a') as log_file:
             process = subprocess.Popen(
-                [py, str(SRC_MAIN)],
+                [py, str(SRC_MAIN), config_arg],
                 stdout=log_file,
                 stderr=subprocess.STDOUT,
                 close_fds=True
@@ -144,7 +134,8 @@ def start(args):
     else:
         # Foreground mode for Windows
         try:
-            subprocess.run([py, str(SRC_MAIN)])
+            config_arg = str(CONFIG_FILE.relative_to(ROOT)) if CONFIG_FILE != ROOT / 'config.json' else 'config.json'
+            subprocess.run([py, str(SRC_MAIN), config_arg])
         except KeyboardInterrupt:
             print('\n🛑 Bot stopped by user')
 
@@ -201,90 +192,238 @@ def status(args):
     print('❌ Bot is not running')
 
 def tui(args):
-    """Text-based User Interface"""
+    """Advanced Text-based User Interface (like x-ui)"""
     try:
         import curses
     except ImportError:
         print("❌ curses not available. Install with: pip install windows-curses (Windows) or use Linux")
         return
 
+    def draw_menu(stdscr, menu_items, current_row, title):
+        stdscr.clear()
+        height, width = stdscr.getmaxyx()
+
+        # Title
+        title_str = f"🚀 {title}"
+        stdscr.addstr(1, (width - len(title_str)) // 2, title_str, curses.A_BOLD)
+
+        # Menu items
+        for idx, item in enumerate(menu_items):
+            x = (width - len(item)) // 2
+            y = height // 2 - len(menu_items) // 2 + idx
+            if idx == current_row:
+                stdscr.attron(curses.A_REVERSE)
+                stdscr.addstr(y, x, item)
+                stdscr.attroff(curses.A_REVERSE)
+            else:
+                stdscr.addstr(y, x, item)
+
+        # Footer
+        footer = "↑↓ Navigate | Enter Select | Q Quit"
+        stdscr.addstr(height - 2, (width - len(footer)) // 2, footer)
+
+    def show_status(stdscr):
+        height, width = stdscr.getmaxyx()
+        stdscr.clear()
+
+        title = "📊 System Status"
+        stdscr.addstr(1, (width - len(title)) // 2, title, curses.A_BOLD)
+
+        # Check bot status
+        running = get_bot_process() is not None
+        status = "🟢 Running" if running else "🔴 Stopped"
+        stdscr.addstr(4, 4, f"Bot Status: {status}")
+
+        # Check config
+        config_exists = CONFIG_FILE.exists()
+        config_status = "✅ Configured" if config_exists else "❌ Not Configured"
+        stdscr.addstr(6, 4, f"Configuration: {config_status}")
+
+        # Check database
+        db_exists = (ROOT / 'vpn_bot.db').exists()
+        db_status = "✅ Database OK" if db_exists else "❌ Database Missing"
+        stdscr.addstr(8, 4, f"Database: {db_status}")
+
+        # Show panels count
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                config = json.load(f)
+                panels = config.get('panels', [])
+                resellers = config.get('resellers', [])
+                stdscr.addstr(10, 4, f"Panels: {len(panels)}")
+                stdscr.addstr(12, 4, f"Resellers: {len(resellers)}")
+        except:
+            stdscr.addstr(10, 4, "Panels: Unable to read config")
+            stdscr.addstr(12, 4, "Resellers: Unable to read config")
+
+        stdscr.addstr(height - 2, (width - 20) // 2, "Press any key to return...")
+        stdscr.getch()
+
     def main_tui(stdscr):
         curses.curs_set(0)
         stdscr.clear()
         stdscr.refresh()
 
-        menu = ['Install', 'Start', 'Stop', 'Restart', 'Status', 'Exit']
+        current_menu = "main"
         current_row = 0
 
         while True:
-            stdscr.clear()
-            height, width = stdscr.getmaxyx()
+            if current_menu == "main":
+                menu_items = [
+                    "📊 System Status",
+                    "⚙️  Configuration",
+                    "🔧 Panel Management",
+                    "👥 User Management",
+                    "🚀 Start Bot",
+                    "🛑 Stop Bot",
+                    "🔄 Restart Bot",
+                    "❌ Exit"
+                ]
+                draw_menu(stdscr, menu_items, current_row, "VPN Bot Manager (x-ui style)")
 
-            # Title
-            title = "🚀 VPN Bot Manager"
-            stdscr.addstr(1, (width - len(title)) // 2, title, curses.A_BOLD)
+            elif current_menu == "config":
+                menu_items = [
+                    "🌐 Web Setup Wizard",
+                    "📝 Edit Config File",
+                    "🔍 View Current Config",
+                    "⬅️  Back to Main Menu"
+                ]
+                draw_menu(stdscr, menu_items, current_row, "Configuration")
 
-            # Menu
-            for idx, item in enumerate(menu):
-                x = (width - len(item)) // 2
-                y = height // 2 - len(menu) // 2 + idx
-                if idx == current_row:
-                    stdscr.attron(curses.A_REVERSE)
-                    stdscr.addstr(y, x, item)
-                    stdscr.attroff(curses.A_REVERSE)
-                else:
-                    stdscr.addstr(y, x, item)
+            elif current_menu == "panels":
+                menu_items = [
+                    "📋 List Panels",
+                    "➕ Add Panel",
+                    "✏️  Edit Panel",
+                    "🗑️  Delete Panel",
+                    "⬅️  Back to Main Menu"
+                ]
+                draw_menu(stdscr, menu_items, current_row, "Panel Management")
 
-            # Status
-            status_text = "Use arrow keys to navigate, Enter to select, Q to quit"
-            stdscr.addstr(height - 2, (width - len(status_text)) // 2, status_text)
+            elif current_menu == "users":
+                menu_items = [
+                    "📋 List Users",
+                    "👤 Add Admin User",
+                    "📊 User Statistics",
+                    "⬅️  Back to Main Menu"
+                ]
+                draw_menu(stdscr, menu_items, current_row, "User Management")
 
             key = stdscr.getch()
 
             if key == curses.KEY_UP and current_row > 0:
                 current_row -= 1
-            elif key == curses.KEY_DOWN and current_row < len(menu) - 1:
+            elif key == curses.KEY_DOWN and current_row < len(menu_items) - 1:
                 current_row += 1
             elif key == curses.KEY_ENTER or key in [10, 13]:
-                if menu[current_row] == 'Install':
-                    stdscr.clear()
-                    stdscr.addstr(height // 2, width // 2 - 10, "Installing...")
-                    stdscr.refresh()
-                    install(None)
-                    stdscr.addstr(height // 2 + 1, width // 2 - 15, "Press any key to continue...")
-                    stdscr.getch()
-                elif menu[current_row] == 'Start':
-                    stdscr.clear()
-                    stdscr.addstr(height // 2, width // 2 - 10, "Starting...")
-                    stdscr.refresh()
-                    start(argparse.Namespace(daemon=True))
-                    stdscr.addstr(height // 2 + 1, width // 2 - 15, "Press any key to continue...")
-                    stdscr.getch()
-                elif menu[current_row] == 'Stop':
-                    stdscr.clear()
-                    stdscr.addstr(height // 2, width // 2 - 10, "Stopping...")
-                    stdscr.refresh()
-                    stop(None)
-                    stdscr.addstr(height // 2 + 1, width // 2 - 15, "Press any key to continue...")
-                    stdscr.getch()
-                elif menu[current_row] == 'Restart':
-                    stdscr.clear()
-                    stdscr.addstr(height // 2, width // 2 - 10, "Restarting...")
-                    stdscr.refresh()
-                    restart(None)
-                    stdscr.addstr(height // 2 + 1, width // 2 - 15, "Press any key to continue...")
-                    stdscr.getch()
-                elif menu[current_row] == 'Status':
-                    stdscr.clear()
-                    stdscr.addstr(height // 2, width // 2 - 10, "Checking status...")
-                    stdscr.refresh()
-                    status(None)
-                    stdscr.addstr(height // 2 + 1, width // 2 - 15, "Press any key to continue...")
-                    stdscr.getch()
-                elif menu[current_row] == 'Exit':
-                    break
+                # Main menu actions
+                if current_menu == "main":
+                    if current_row == 0:  # System Status
+                        show_status(stdscr)
+                    elif current_row == 1:  # Configuration
+                        current_menu = "config"
+                        current_row = 0
+                    elif current_row == 2:  # Panel Management
+                        current_menu = "panels"
+                        current_row = 0
+                    elif current_row == 3:  # User Management
+                        current_menu = "users"
+                        current_row = 0
+                    elif current_row == 4:  # Start Bot
+                        stdscr.clear()
+                        height, width = stdscr.getmaxyx()
+                        stdscr.addstr(height // 2, width // 2 - 10, "Starting bot...")
+                        stdscr.refresh()
+                        start(argparse.Namespace(daemon=True))
+                        stdscr.addstr(height // 2 + 1, width // 2 - 15, "Bot started! Press any key...")
+                        stdscr.getch()
+                    elif current_row == 5:  # Stop Bot
+                        stdscr.clear()
+                        height, width = stdscr.getmaxyx()
+                        stdscr.addstr(height // 2, width // 2 - 10, "Stopping bot...")
+                        stdscr.refresh()
+                        stop(None)
+                        stdscr.addstr(height // 2 + 1, width // 2 - 15, "Bot stopped! Press any key...")
+                        stdscr.getch()
+                    elif current_row == 6:  # Restart Bot
+                        stdscr.clear()
+                        height, width = stdscr.getmaxyx()
+                        stdscr.addstr(height // 2, width // 2 - 10, "Restarting bot...")
+                        stdscr.refresh()
+                        restart(None)
+                        stdscr.addstr(height // 2 + 1, width // 2 - 15, "Bot restarted! Press any key...")
+                        stdscr.getch()
+                    elif current_row == 7:  # Exit
+                        break
+
+                # Config menu actions
+                elif current_menu == "config":
+                    if current_row == 0:  # Web Setup
+                        setup(None)
+                        stdscr.clear()
+                        height, width = stdscr.getmaxyx()
+                        stdscr.addstr(height // 2, width // 2 - 20, "Web setup started! Check your browser.")
+                        stdscr.addstr(height // 2 + 1, width // 2 - 15, "Press any key to continue...")
+                        stdscr.getch()
+                    elif current_row == 1:  # Edit Config
+                        stdscr.clear()
+                        height, width = stdscr.getmaxyx()
+                        msg = "Use your preferred editor to edit config.json"
+                        stdscr.addstr(height // 2, (width - len(msg)) // 2, msg)
+                        stdscr.addstr(height // 2 + 1, (width - 30) // 2, "Press any key to continue...")
+                        stdscr.getch()
+                    elif current_row == 2:  # View Config
+                        stdscr.clear()
+                        try:
+                            with open(CONFIG_FILE, 'r') as f:
+                                config_content = f.read()
+                            stdscr.addstr(1, 1, "Current Configuration (press any key to scroll):")
+                            lines = config_content.split('\n')
+                            max_lines = height - 3
+                            for i, line in enumerate(lines[:max_lines]):
+                                if i < height - 3:
+                                    stdscr.addstr(i + 2, 1, line[:width-2])
+                        except:
+                            stdscr.addstr(height // 2, width // 2 - 15, "Unable to read config file")
+                        stdscr.getch()
+                    elif current_row == 3:  # Back
+                        current_menu = "main"
+                        current_row = 0
+
+                # Panels menu actions
+                elif current_menu == "panels":
+                    if current_row == 0:  # List Panels
+                        stdscr.clear()
+                        height, width = stdscr.getmaxyx()
+                        stdscr.addstr(1, 1, "Configured Panels:")
+                        try:
+                            with open(CONFIG_FILE, 'r') as f:
+                                config = json.load(f)
+                                panels = config.get('panels', [])
+                                for i, panel in enumerate(panels):
+                                    status = "🟢" if panel.get('enabled', True) else "🔴"
+                                    info = f"{status} {panel.get('id', 'unknown')}: {panel.get('url', 'no url')}"
+                                    stdscr.addstr(3 + i, 1, info[:width-2])
+                        except:
+                            stdscr.addstr(3, 1, "Unable to read panel configuration")
+                        stdscr.addstr(height - 2, 1, "Press any key to return...")
+                        stdscr.getch()
+                    elif current_row == 4:  # Back
+                        current_menu = "main"
+                        current_row = 0
+
+                # Users menu actions
+                elif current_menu == "users":
+                    if current_row == 3:  # Back
+                        current_menu = "main"
+                        current_row = 0
+
             elif key == ord('q') or key == ord('Q'):
-                break
+                if current_menu == "main":
+                    break
+                else:
+                    current_menu = "main"
+                    current_row = 0
 
     curses.wrapper(main_tui)
 
@@ -308,8 +447,13 @@ def main():
     parser.add_argument('command', choices=['install', 'start', 'stop', 'restart', 'status', 'tui', 'setup'],
                        nargs='?', default='tui', help='Command to run')
     parser.add_argument('--daemon', action='store_true', help='Run in daemon mode (background)')
+    parser.add_argument('--config', default='config.json', help='Configuration file path (default: config.json)')
 
     args = parser.parse_args()
+
+    # Set global config file path
+    global CONFIG_FILE
+    CONFIG_FILE = ROOT / args.config
 
     if args.command == 'install':
         install(args)

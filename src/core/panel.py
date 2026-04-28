@@ -1,29 +1,34 @@
-# panel.py
+# panel.py - Multi-panel management
 import requests
 import json
 import uuid
 from datetime import datetime, timedelta
-from ..core.config import PANEL_URL, USERNAME, PASSWORD, PANEL_PROXY, INBOUND_ID
+from ..core.config import PANELS
 
 class XUIPanel:
-    def __init__(self):
-        self.base_url = PANEL_URL.rstrip('/')
+    def __init__(self, panel_config):
+        self.id = panel_config['id']
+        self.base_url = panel_config['url'].rstrip('/')
+        self.username = panel_config['username']
+        self.password = panel_config['password']
+        self.inbound_id = panel_config.get('inbound_id', 1)
         self.session = requests.Session()
         self.logged_in = False
-        if PANEL_PROXY:
-            self.session.proxies = {'http': PANEL_PROXY, 'https': PANEL_PROXY}
+        proxy = panel_config.get('proxy')
+        if proxy:
+            self.session.proxies = {'http': proxy, 'https': proxy}
 
     def login(self):
         if self.logged_in:
             return
         login_url = f"{self.base_url}/login"
         data = {
-            'username': USERNAME,
-            'password': PASSWORD
+            'username': self.username,
+            'password': self.password
         }
         response = self.session.post(login_url, data=data)
         if response.status_code != 200 or not response.json().get('success'):
-            raise Exception("Login failed")
+            raise Exception(f"Login failed for panel {self.id}")
         self.logged_in = True
 
     def ensure_login(self):
@@ -36,18 +41,21 @@ class XUIPanel:
         response = self.session.get(url)
         return response.json()
 
-    def add_client(self, inbound_id, email, total_gb=0, expiry_time=0):
+    def add_client(self, email, total_gb=0, expiry_time=0):
         self.ensure_login()
         url = f"{self.base_url}/panel/api/inbounds/addClient"
         client_id = str(uuid.uuid4())
         data = {
-            'id': inbound_id,
+            'id': self.inbound_id,
             'settings': json.dumps({
                 'clients': [{
                     'id': client_id,
                     'email': email,
                     'totalGB': total_gb,
-                    'expiryTime': expiry_time
+                    'expiryTime': expiry_time,
+                    'enable': True,
+                    'tgId': '',
+                    'subId': ''
                 }]
             })
         }
@@ -56,7 +64,7 @@ class XUIPanel:
         if result.get('success'):
             return client_id
         else:
-            raise Exception("Failed to add client")
+            raise Exception(f"Failed to add client to panel {self.id}")
 
     def get_client_config(self, sub_id):
         self.ensure_login()
@@ -124,3 +132,31 @@ class XUIPanel:
                     client['inbound_id'] = inbound['id']
                     clients.append(client)
         return clients
+
+
+class PanelManager:
+    def __init__(self):
+        self.panels = {}
+        for panel_config in PANELS:
+            if panel_config.get('enabled', True):
+                self.panels[panel_config['id']] = XUIPanel(panel_config)
+
+    def get_panel(self, panel_id=None):
+        """Get a panel by ID, or return the first available panel"""
+        if panel_id and panel_id in self.panels:
+            return self.panels[panel_id]
+        return next(iter(self.panels.values())) if self.panels else None
+
+    def get_available_panel(self):
+        """Get an available panel using round-robin or load balancing"""
+        # For now, just return the first panel
+        # TODO: Implement load balancing logic
+        return next(iter(self.panels.values())) if self.panels else None
+
+    def get_all_panels(self):
+        """Get all enabled panels"""
+        return list(self.panels.values())
+
+
+# Global panel manager instance
+panel_manager = PanelManager()

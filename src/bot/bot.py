@@ -11,7 +11,7 @@ from ..utils.helpers import convert_traffic
 from ..db.database import (SessionLocal, get_user_by_telegram_id, get_user_by_id, create_user, create_subscription, 
                       get_user_subscriptions, update_balance, get_wallet, check_rate_limit, record_action,
                       create_payment, update_payment_status, create_referral, get_referrals, get_backups, create_backup)
-from ..core.panel import XUIPanel
+from ..core.panel import panel_manager
 from ..core.payment import has_payment_gateway, get_payment_buttons
 from datetime import datetime, timedelta
 import logging
@@ -20,6 +20,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 panel = XUIPanel()
+
+def get_user_panel(user):
+    """Get the appropriate panel for a user based on their reseller"""
+    reseller_id = getattr(user, 'reseller_id', 'default')
+    # For now, assign users to panels based on reseller
+    # TODO: Implement more sophisticated panel assignment logic
+    return panel_manager.get_available_panel()
 
 def generate_qr(config_text):
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
@@ -98,8 +105,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             email = f"trial_{user_id}_{int(datetime.utcnow().timestamp())}@trial.vpn"
             expiry_date = datetime.utcnow() + timedelta(hours=TRIAL_DURATION_HOURS)
             trial_gb = convert_traffic(TRIAL_TRAFFIC_LIMIT, TRIAL_TRAFFIC_UNIT)
-            client_id = panel.add_client(INBOUND_ID, email, total_gb=trial_gb * 1024**3, expiry_time=int(expiry_date.timestamp()*1000))
-            create_subscription(db, user.id, client_id, 'trial', trial_gb, expiry_date, is_trial=True)
+            user_panel = get_user_panel(user)
+            client_id = user_panel.add_client(email, total_gb=trial_gb * 1024**3, expiry_time=int(expiry_date.timestamp()*1000))
+            create_subscription(db, user.id, client_id, 'trial', trial_gb, expiry_date, is_trial=True, panel_id=user_panel.id)
             record_action(db, user.id, 'trial_config')
             config = panel.get_client_config(client_id)
             await send_config_with_qr(query, config, lang)
@@ -219,11 +227,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 db.close()
                 return
             
-            client_id = panel.add_client(INBOUND_ID, email, total_gb=plan_gb * 1024**3, expiry_time=int(expiry_date.timestamp()*1000))
-            create_subscription(db, user.id, client_id, plan_key, plan_gb, expiry_date)
+            user_panel = get_user_panel(user)
+            client_id = user_panel.add_client(email, total_gb=plan_gb * 1024**3, expiry_time=int(expiry_date.timestamp()*1000))
+            create_subscription(db, user.id, client_id, plan_key, plan_gb, expiry_date, panel_id=user_panel.id)
             record_action(db, user.id, 'buy_config')
             
-            config = panel.get_client_config(client_id)
+            config = user_panel.get_client_config(client_id)
             await send_config_with_qr(update, config, lang)
             
             # Send software links

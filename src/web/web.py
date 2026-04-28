@@ -1,7 +1,7 @@
 # web.py - Enhanced with Bootstrap and better management
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-from ..core.config import SECRET_KEY, WEB_HOST, WEB_PORT, ADMIN_IDS
-from ..db.database import (SessionLocal, get_user_by_telegram_id, get_user_by_id,
+from ..core.config import SECRET_KEY, WEB_HOST, WEB_PORT, ADMIN_IDS, set_config_file, _config_file
+from ..db.database import (SessionLocal, get_user_by_telegram_id, get_user_by_id, 
                       get_user_subscriptions, get_backups, Wallet, Payment, User, Subscription)
 from functools import wraps
 from datetime import datetime
@@ -11,7 +11,7 @@ import json
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config.json')
+CONFIG_FILE = _config_file
 
 def load_config():
     """Load configuration from JSON file"""
@@ -89,22 +89,54 @@ def index():
 @app.route('/setup', methods=['GET', 'POST'])
 def setup():
     if request.method == 'POST':
+        # Handle multiple panels
+        panels = []
+        panel_count = int(request.form.get('panel_count', 1))
+        
+        for i in range(panel_count):
+            panel = {
+                'id': request.form.get(f'panel_{i}_id', f'panel_{i+1}'),
+                'url': request.form.get(f'panel_{i}_url', ''),
+                'username': request.form.get(f'panel_{i}_username', ''),
+                'password': request.form.get(f'panel_{i}_password', ''),
+                'inbound_id': int(request.form.get(f'panel_{i}_inbound_id', 1)),
+                'proxy': request.form.get(f'panel_{i}_proxy', ''),
+                'enabled': request.form.get(f'panel_{i}_enabled') == 'on'
+            }
+            if panel['url']:  # Only add panels with URLs
+                panels.append(panel)
+        
+        # Handle resellers
+        resellers = []
+        reseller_count = int(request.form.get('reseller_count', 1))
+        
+        for i in range(reseller_count):
+            reseller = {
+                'id': request.form.get(f'reseller_{i}_id', f'reseller_{i+1}'),
+                'name': request.form.get(f'reseller_{i}_name', ''),
+                'telegram_ids': [int(x.strip()) for x in request.form.get(f'reseller_{i}_telegram_ids', '').split(',') if x.strip()],
+                'panels': request.form.getlist(f'reseller_{i}_panels'),
+                'payments': {
+                    'tetra': {
+                        'enabled': request.form.get(f'reseller_{i}_tetra_enabled') == 'on',
+                        'api_key': request.form.get(f'reseller_{i}_tetra_api_key', '')
+                    }
+                },
+                'enabled': request.form.get(f'reseller_{i}_enabled') == 'on'
+            }
+            if reseller['name']:  # Only add resellers with names
+                resellers.append(reseller)
+        
         config = {
-            'panel_url': request.form.get('panel_url', ''),
-            'panel_username': request.form.get('panel_username', ''),
-            'panel_password': request.form.get('panel_password', ''),
-            'inbound_id': int(request.form.get('inbound_id', 1)),
+            'panels': panels,
+            'resellers': resellers,
             'telegram_bot_token': request.form.get('telegram_bot_token', ''),
-            'admin_ids': [int(x.strip()) for x in request.form.get('admin_ids', '').split(',') if x.strip()],
-            'tetra_enabled': request.form.get('tetra_enabled') == 'on',
-            'tetra_api_key': request.form.get('tetra_api_key', ''),
             'payment_enabled': request.form.get('payment_enabled') == 'on',
             'trial_duration_hours': int(request.form.get('trial_duration_hours', 2)),
             'trial_traffic_limit': float(request.form.get('trial_traffic_limit', 1)),
             'trial_traffic_unit': request.form.get('trial_traffic_unit', 'GB'),
             'traffic_alert_gb': float(request.form.get('traffic_alert_gb', 1)),
             'referral_commission_percent': float(request.form.get('referral_commission_percent', 10)),
-            'panel_proxy': request.form.get('panel_proxy', ''),
             'telegram_proxy': request.form.get('telegram_proxy', ''),
             'web_host': request.form.get('web_host', '0.0.0.0'),
             'web_port': int(request.form.get('web_port', 5000)),
